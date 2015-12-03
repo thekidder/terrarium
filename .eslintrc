@@ -1,0 +1,29 @@
+{
+  "ecmaFeatures": {
+    "modules": true
+  },
+  "parser": "babel-eslint",
+  "env": {
+    "commonjs": true,
+    "es6": true
+  },
+  "rules": {
+    "comma-dangle": [2, "always-multiline"],
+    "eol-last": 2,
+    "indent": [2, 2],
+    "jsx-quotes": [2, "prefer-single"],
+    "no-cond-assign": 2,
+    "no-const-assign": 2,
+    "no-empty": 2,
+    "no-irregular-whitespace": 2,
+    "no-underscore-dangle": 2,
+    "no-unreachable": 2,
+    "no-trailing-spaces": 2,
+    "no-use-before-define": 2,
+    "no-var": 2,
+    "prefer-const": 1,
+    "prefer-template": 1,
+    "semi": [2, "always"],
+    "strict": 2,
+  }
+}
