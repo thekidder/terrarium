@@ -1,6 +1,7 @@
 {
   "name": "terrarium",
   "version": "1.0.0",
+  "private": true,
   "description": "Tiny Worlds",
   "main": "webpack.config.js",
   "scripts": {
@@ -9,6 +10,10 @@
     "start": "webpack-dev-server --progress --colors --inline"
   },
   "author": "Adam Kidder <thekidder@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/username/repository.git"
+  },
   "license": "ISC",
   "devDependencies": {
     "babel": "6.1.18",
