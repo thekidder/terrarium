@@ -1,4 +1,5 @@
 import THREE from 'three.js';
+import Simplex from 'simplex-noise';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -8,7 +9,60 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setPixelRatio( window.devicePixelRatio );
 document.body.appendChild( renderer.domElement );
 
-const geometry = new THREE.SphereGeometry( 1, 7, 7);
+const x = 0.525731112119133606;
+const z = 0.850650808352039932;
+const scale = 1.0;
+
+const simplex = new Simplex(Math.random);
+
+function generate(x, y, z) {
+  const noise = simplex.noise3D(x, y, z);
+  return (new THREE.Vector3(x, y, z)).multiplyScalar(1 + noise * 0.2);
+}
+
+const geometry = new THREE.Geometry();
+geometry.vertices = [
+  generate(-x,  0.0,  z),
+  generate( x,  0.0,  z),
+  generate(-x,  0.0, -z),
+  generate( x,  0.0, -z),
+
+  generate(0.0,  z,  x),
+  generate(0.0,  z, -x),
+  generate(0.0, -z,  x),
+  generate(0.0, -z, -x),
+
+  generate( z,  x,  0.0),
+  generate(-z,  x,  0.0),
+  generate( z, -x,  0.0),
+  generate(-z, -x,  0.0),
+];
+
+geometry.faces = [
+  new THREE.Face3(0, 4, 1),
+  new THREE.Face3(0, 9, 4),
+  new THREE.Face3(9, 5, 4),
+  new THREE.Face3(4, 5, 8),
+  new THREE.Face3(4, 8, 1),
+
+  new THREE.Face3(8, 10, 1),
+  new THREE.Face3(8, 3, 10),
+  new THREE.Face3(5, 3, 8),
+  new THREE.Face3(5, 2, 3),
+  new THREE.Face3(2, 7, 3),
+
+  new THREE.Face3(7, 10, 3),
+  new THREE.Face3(7, 6, 10),
+  new THREE.Face3(7, 11, 6),
+  new THREE.Face3(11, 0, 6),
+  new THREE.Face3(0, 1, 6),
+
+  new THREE.Face3(6, 1, 10),
+  new THREE.Face3(9, 0, 11),
+  new THREE.Face3(9, 11, 2),
+  new THREE.Face3(9, 2, 5),
+  new THREE.Face3(7, 2, 11),
+];
 const material = new THREE.MeshPhongMaterial({
   color: 0x156289,
   emissive: 0x072534,
@@ -29,7 +83,7 @@ lights[2].position.set( -100, -200, -100 );
 scene.add( lights[0] );
 scene.add( lights[1] );
 scene.add( lights[2] );
-camera.position.z = 8;
+camera.position.z = 2.5;
 
 function render() {
   requestAnimationFrame( render );
