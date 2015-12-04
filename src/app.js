@@ -101,7 +101,7 @@ function regen(s, m) {
 
   sphere.geometry.vertices.forEach(function(v) {
     const noise = simplex.noise3D(v.x * s, v.y * s, v.z * s);
-    v.copy(v.original.clone().multiplyScalar(1 + noise * m));
+    v.copy(v.original.clone().multiplyScalar(Math.max(1.0, 1 + noise * m * 0.5)));
   });
   sphere.geometry.verticesNeedUpdate = true;
   sphere.geometry.computeBoundingBox();
