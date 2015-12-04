@@ -2,7 +2,7 @@ import THREE from 'three.js';
 import Simplex from 'simplex-noise';
 import Random from 'random-seed';
 
-const seed = Math.random();
+let seed = Math.random();
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -130,6 +130,7 @@ window.onresize = function() {
 let drag = false;
 let mx = 0, my = 0;
 
+document.onclick = function() { seed = Math.random(); r = true; };
 document.onmousedown = function(event) { drag = true; mx = event.screenX; my = event.screenY; };
 document.onmouseup   = function() { drag = false; };
 document.onmousemove = function(event) {
