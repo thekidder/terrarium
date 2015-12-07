@@ -8,7 +8,7 @@ class Planet {
     this.scale = 1.5;
     this.magnitude = 0.25;
     this.waterHeight = 1.02;
-    this.sandThreshold = 0.2;
+    this.sandThreshold = 0.3;
 
     this.scene = scene;
     this.t = 0;
