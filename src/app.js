@@ -29,7 +29,7 @@ window.onresize = function() {
   game.onResize(width, height);
 };
 
-document.onclick     = function(event) { game.onClick(event); };
+document.onkeydown   = function(event) { game.onKeyDown(event); };
 document.onmousedown = function(event) { game.onMouseDown(event); };
 document.onmouseup   = function(event) { game.onMouseUp(event); };
 document.onmousemove = function(event) { game.onMouseMove(event); };

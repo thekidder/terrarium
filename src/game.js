@@ -42,7 +42,7 @@ class Game {
     this.camera.updateProjectionMatrix();
   }
 
-  onClick(event) {
+  onKeyDown(event) {
     this.planet.seed = Math.random();
     this.planet.needsRegeneration = true;
   }
