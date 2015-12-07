@@ -5,6 +5,11 @@ import Random from 'random-seed';
 
 class Planet {
   constructor(scene) {
+    this.scale = 1.5;
+    this.magnitude = 0.25;
+    this.waterHeight = 1.02;
+    this.sandThreshold = 0.2;
+
     this.scene = scene;
     this.t = 0;
 
@@ -24,8 +29,6 @@ class Planet {
     ]);
 
     this.seed = Math.random();
-    this.scale = 1.5;
-    this.magnitude = 0.25;
     this.rotation = 0.0;
     this.needsRegeneration = true;
 
@@ -65,10 +68,10 @@ class Planet {
     this.sphere.geometry.vertices.forEach(function(v, i) {
       const noise = simplex.noise3D(v.x * s, v.y * s, v.z * s);
       v.multiplyScalar(1 + noise * m * 0.5);
-      if (noise > 0.1) {
+      if (noise > this.sandThreshold) {
         groundVerts.push(i);
       }
-    });
+    }.bind(this));
 
     this.sphere.geometry.faces.forEach(function(f) {
       if (_.indexOf(groundVerts, f.a, true) !== -1 ||
@@ -95,7 +98,7 @@ class Planet {
     this.waterSphere.geometry.vertices.forEach(function(v) {
       let noise = this.waterSimplex.noise4D(v.original.x, v.original.y, v.original.z, this.t / 3000.0);
       noise = noise * 0.5 + 0.5;
-      v.copy(v.original.clone().multiplyScalar(1.0 - noise * 0.03));
+      v.copy(v.original.clone().multiplyScalar(this.waterHeight - noise * 0.03));
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 
