@@ -1,6 +1,7 @@
 import THREE from 'three.js';
 
 import Planet from './planet.js';
+import PlanetMath from './planet-math.js';
 
 class Game {
   constructor(renderer) {
@@ -12,6 +13,24 @@ class Game {
 
     this.populateScene();
     this.planet = new Planet(this.scene);
+
+    const nibbleMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+    });
+    const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
+    this.nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
+    this.nibbleTheta = Math.random() * Math.PI * 2;
+    this.nibblePhi = Math.random() * Math.PI;
+
+    const nibblePos = PlanetMath.polarToCartesian({
+      theta: this.nibbleTheta,
+      phi: this.nibblePhi,
+      r: this.planet.getHeight(this.nibbleTheta, this.nibblePhi) + 0.0,
+    });
+    this.nibble.position.x = nibblePos.x;
+    this.nibble.position.y = nibblePos.y;
+    this.nibble.position.z = nibblePos.z;
+    this.planet.waterSphere.add(this.nibble);
   }
 
   populateScene() {

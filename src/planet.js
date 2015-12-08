@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import PlanetMath from './planet-math.js';
 import Simplex from 'simplex-noise';
 import THREE from 'three.js';
 import Random from 'random-seed';
@@ -64,10 +65,18 @@ class Planet {
     const simplex = new Simplex(random.random);
 
     const groundVerts = [];
+    this.heights = [];
 
     this.sphere.geometry.vertices.forEach(function(v, i) {
       const noise = simplex.noise3D(v.x * s, v.y * s, v.z * s);
-      v.multiplyScalar(1 + noise * m * 0.5);
+      const height = 1 + noise * m * 0.5;
+      this.heights.push({
+        x: v.x,
+        y: v.y,
+        z: v.z,
+        height: height,
+      });
+      v.multiplyScalar(height);
       if (noise > this.sandThreshold) {
         groundVerts.push(i);
       }
@@ -87,6 +96,7 @@ class Planet {
     this.sphere.geometry.computeBoundingBox();
     this.sphere.geometry.center();
     this.scene.add(this.sphere);
+    this.needsRegeneration = false;
   }
 
   update(millis) {
@@ -102,9 +112,21 @@ class Planet {
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 
-    this.rotation += 0.0002 * millis;
+    this.rotation += 0.0008 * millis;
     this.sphere.rotation.y = this.rotation;
+    this.waterSphere.rotation.y = this.rotation;
     this.t += millis;
+  }
+
+  getHeight(theta, phi) {
+    // convert to cartesian, then look for closest anchor
+    const cartesian = PlanetMath.polarToCartesian({r: 1, theta: theta, phi: phi});
+
+    return _.min(this.heights, function(anchor) {
+      return (cartesian.x - anchor.x) * (cartesian.x - anchor.x) +
+          (cartesian.y - anchor.y) * (cartesian.y * anchor.y) +
+          (cartesian.z - anchor.z) * (cartesian.z * anchor.z);
+    }).height;
   }
 }
 
