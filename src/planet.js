@@ -34,13 +34,63 @@ class Planet {
     this.needsRegeneration = true;
 
     const waterGeometry = new THREE.IcosahedronGeometry(1, 4);
-    const waterMaterial = new THREE.MeshPhongMaterial({
-      color: 0x156289,
-      emissive: 0x072534,
-      side: THREE.DoubleSide,
-      shading: THREE.FlatShading,
-      transparent: true,
-      opacity: 0.8,
+    const waterMaterial = new THREE.ShaderMaterial( {
+      vertexShader:`
+        varying vec3 n;
+        varying vec3 p;
+
+        void main() {
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+          n = normal;
+          p = gl_Position.xyz;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 p;
+        varying vec3 n;
+
+        uniform vec3 pointLightColor[ MAX_POINT_LIGHTS ];
+
+        uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];
+        uniform float pointLightDistance[ MAX_POINT_LIGHTS ];
+        uniform float pointLightDecay[ MAX_POINT_LIGHTS ];
+
+        float diffuse(vec3 n,vec3 l,float p) {
+          return pow(dot(n,l) * 0.4 + 0.6,p);
+        }
+
+        vec3 getSkyColor(vec3 e) {
+          e.y = max(e.y,0.0);
+          vec3 ret;
+          ret.x = pow(1.0-e.y,2.0);
+          ret.y = 1.0-e.y;
+          ret.z = 0.6+(1.0-e.y)*0.4;
+          return ret;
+        }
+
+        const vec3 SEA_BASE = vec3(0.1,0.19,0.22);
+        const vec3 SEA_WATER_COLOR = vec3(0.8,0.9,0.6);
+
+        void main() {
+          vec3 eye = cameraPosition - p;
+
+          vec3 color = vec3(0.0, 0.0, 0.0);
+          for ( int i = 0; i < MAX_POINT_LIGHTS; i ++ ) {
+            //const int i = 2;
+            vec3 lightColor = pointLightColor[ i ];
+
+            vec3 lightDirection = normalize(pointLightPosition[ i ] - p);
+            float fresnel = 1.0 - max(dot(n,-eye),0.0);
+            fresnel = pow(fresnel,3.0) * 0.65;
+
+            vec3 reflected = getSkyColor(reflect(eye,n));
+            vec3 refracted = SEA_BASE + diffuse(n,lightDirection,80.0) * SEA_WATER_COLOR * 0.12;
+
+            color += 0.45 * mix(refracted,reflected,fresnel);
+          }
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
     });
     this.waterSimplex = new Simplex(Math.random);
     this.waterSphere = new THREE.Mesh(waterGeometry, waterMaterial);
@@ -106,13 +156,14 @@ class Planet {
     }
 
     this.waterSphere.geometry.vertices.forEach(function(v) {
-      let noise = this.waterSimplex.noise4D(v.original.x, v.original.y, v.original.z, this.t / 3000.0);
+      const s = 2.4;
+      let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 5000.0);
       noise = noise * 0.5 + 0.5;
-      v.copy(v.original.clone().multiplyScalar(this.waterHeight - noise * 0.03));
+      v.copy(v.original.clone().multiplyScalar(this.waterHeight - noise * 0.04));
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 
-    this.rotation += 0.0008 * millis;
+    //this.rotation += 0.0008 * millis;
     this.sphere.rotation.y = this.rotation;
     this.waterSphere.rotation.y = this.rotation;
     this.t += millis;
