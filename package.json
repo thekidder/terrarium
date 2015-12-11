@@ -29,6 +29,7 @@
     "flowcheck": "^0.2.7",
     "flowcheck-loader": "^1.0.0",
     "path": "^0.12.7",
+    "random-seed": "^0.3.0",
     "simplex-noise": "^2.2.0",
     "stats.js": "^1.0.0",
     "three.js": "^0.73.0",
