@@ -33,7 +33,7 @@ class Planet {
     this.rotation = 0.0;
     this.needsRegeneration = true;
 
-    const waterGeometry = new THREE.IcosahedronGeometry(1, 4);
+    const waterGeometry = new THREE.IcosahedronGeometry(1, 3);
     const waterMaterial = new THREE.MeshPhongMaterial({
       color: 0x214EA1,
       emissive: 0x0E2143,
