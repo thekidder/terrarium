@@ -17,20 +17,23 @@ class Game {
     const nibbleMaterial = new THREE.MeshBasicMaterial({
       color: 0xffffff,
     });
-    const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
-    this.nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
-    this.nibbleTheta = Math.random() * Math.PI * 2;
-    this.nibblePhi = Math.random() * Math.PI;
+    for(let i = 0; i < 50; ++i) {
+      const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
+      const nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
+      const nibbleTheta = Math.random() * Math.PI * 2;
+      const nibblePhi = Math.random() * Math.PI;
 
-    const nibblePos = PlanetMath.polarToCartesian({
-      theta: this.nibbleTheta,
-      phi: this.nibblePhi,
-      r: this.planet.getHeight(this.nibbleTheta, this.nibblePhi) + 0.0,
-    });
-    this.nibble.position.x = nibblePos.x;
-    this.nibble.position.y = nibblePos.y;
-    this.nibble.position.z = nibblePos.z;
-    this.planet.waterSphere.add(this.nibble);
+      const nibblePos = PlanetMath.sphericalToCartesian({
+        theta: nibbleTheta,
+        phi: nibblePhi,
+        r: this.planet.getHeight(nibbleTheta, nibblePhi) + 0.0,
+      });
+      console.log(`found nibble height: ${this.planet.getHeight(nibbleTheta, nibblePhi)}`);
+      nibble.position.x = nibblePos.x;
+      nibble.position.y = nibblePos.y;
+      nibble.position.z = nibblePos.z;
+      this.planet.waterSphere.add(nibble);
+    }
   }
 
   populateScene() {
