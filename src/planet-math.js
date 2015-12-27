@@ -6,7 +6,7 @@ const PlanetMath = {
         cartesian.z * cartesian.z);
     return {
       theta: Math.atan2(cartesian.y, cartesian.x),
-      phi: Math.acos(cartesian.z / r),
+      phi: Math.atan2(Math.sqrt(cartesian.x*cartesian.x+cartesian.y*cartesian.y),cartesian.z),
       r: r,
     };
   },

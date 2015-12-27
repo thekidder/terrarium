@@ -25,45 +25,43 @@ class Heightmap {
       v.multiplyScalar(this.generationFunc(v));
     }.bind(this));
 
+    this.geometry.faces.forEach(function(f) {
+      const uv = function(index) {
+        const polar = PlanetMath.cartesianToSpherical(this.geometry.vertices[index]);
+        return `(${polar.theta.toFixed(3)}, ${polar.phi.toFixed(3)})`;
+      }.bind(this);
+
+      const xyz = function(index) {
+        const v = this.geometry.vertices[index];
+        return `(${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`;
+      }.bind(this);
+
+      const angle = function(i1, i2) {
+        const p1 = PlanetMath.cartesianToSpherical(this.geometry.vertices[i1]);
+        const p2 = PlanetMath.cartesianToSpherical(this.geometry.vertices[i2]);
+        return 180/Math.PI * Math.acos(Math.cos(p1.phi) * Math.cos(p2.phi) + Math.sin(p1.phi) * Math.sin(p2.phi) * Math.cos(p1.theta - p2.theta));
+      }.bind(this);
+
+      const angle2 = function(i1, i2) {
+        const p1 = this.geometry.vertices[i1];
+        const p2 = this.geometry.vertices[i2];
+        return 180/Math.PI * Math.acos(p1.dot(p2) / (p1.length() * p2.length()));
+      }.bind(this);
+    }.bind(this));
+
     this.geometry.verticesNeedUpdate = true;
     this.geometry.computeBoundingBox();
   }
 
-  _findClosestIndices(coord, list, prop) {
-    const closest = _.sortedIndex(list, coord, prop);
-
-    const indices = [];
-
-    // wrap-around:
-    for(let i = list.length - 2 + closest; i < list.length; ++i) {
-      indices.push(list[i]);
-    }
-
-    if(closest === list.length - 1) {
-      indices.push(list[0]);
-    }
-
-    const minIndex = Math.max(0, closest - 2);
-    const maxIndex = Math.min(list.length - 1, closest + 1);
-
-    for(let i = minIndex; i <= maxIndex; ++i) {
-      indices.push(list[i]);
-    }
-
-    return indices;
-  }
-
   findClosest(sphericalCoords) {
-    const closestIndices = this._findClosestIndices(sphericalCoords, this.verticesSortedByTheta, 'theta')
-        .concat(this._findClosestIndices(sphericalCoords, this.verticesSortedByPhi, 'phi'));
-
-    const closestIndex = _.min(closestIndices, function(index) {
-      const vert = this.geometry.vertices[index.index].sphericalCoords;
-      return (vert.theta - sphericalCoords.theta) * (vert.theta - sphericalCoords.theta)
-          + (vert.phi - sphericalCoords.phi) * (vert.phi - sphericalCoords.phi);
+    const closest = _.min(this.geometry.vertices, function(v) {
+      const vert = v.sphericalCoords;
+      const thetaDiff = (vert.theta - sphericalCoords.theta) % (Math.PI * 2);
+      const phiDiff = (vert.phi - sphericalCoords.phi) % (Math.PI * 2);
+      return thetaDiff * thetaDiff + phiDiff * phiDiff;
     }.bind(this));
 
-    return this.geometry.vertices[closestIndex.index];
+    return closest;
   }
 }
 
