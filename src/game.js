@@ -26,12 +26,14 @@ class Game {
       const nibblePos = PlanetMath.sphericalToCartesian({
         theta: nibbleTheta,
         phi: nibblePhi,
-        r: this.planet.getHeight(nibbleTheta, nibblePhi) + 0.0,
+        r: 1.0,
       });
-      console.log(`found nibble height: ${this.planet.getHeight(nibbleTheta, nibblePhi)}`);
-      nibble.position.x = nibblePos.x;
-      nibble.position.y = nibblePos.y;
-      nibble.position.z = nibblePos.z;
+      this.planet.face(nibblePos);
+      const nibbleSurfacePos = this.planet.placeOnSurface(nibblePos);
+      console.log(`found nibble pos: ${JSON.stringify(nibbleSurfacePos)} from ${JSON.stringify(nibblePos)}`);
+      nibble.position.x = nibbleSurfacePos.x;
+      nibble.position.y = nibbleSurfacePos.y;
+      nibble.position.z = nibbleSurfacePos.z;
       this.planet.waterSphere.add(nibble);
     }
   }

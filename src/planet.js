@@ -102,11 +102,12 @@ class Planet {
     this.t += millis;
   }
 
-  getHeight(theta, phi) {
-    const v = {theta: theta, phi: phi};
-    const closest = this.heightmap.findClosest(v);
-    console.log(`closest vert to ${JSON.stringify(v)} is ${JSON.stringify(closest)}`);
-    return closest.length();
+  face(point) {
+    return this.heightmap.face(point);
+  }
+
+  placeOnSurface(cartesianCoords) {
+    return this.heightmap.placeOnSurface(cartesianCoords);
   }
 }
 
