@@ -28,8 +28,7 @@ class Game {
         phi: nibblePhi,
         r: 1.0,
       });
-      this.planet.face(nibblePos);
-      const nibbleSurfacePos = this.planet.placeOnSurface(nibblePos);
+      const nibbleSurfacePos = this.planet.placeOnSurface(new THREE.Vector3(nibblePos.x, nibblePos.y, nibblePos.z));
       console.log(`found nibble pos: ${JSON.stringify(nibbleSurfacePos)} from ${JSON.stringify(nibblePos)}`);
       nibble.position.x = nibbleSurfacePos.x;
       nibble.position.y = nibbleSurfacePos.y;

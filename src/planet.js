@@ -102,8 +102,8 @@ class Planet {
     this.t += millis;
   }
 
-  face(point) {
-    return this.heightmap.face(point);
+  locateFace(point) {
+    return this.heightmap.locateFace(point);
   }
 
   placeOnSurface(cartesianCoords) {

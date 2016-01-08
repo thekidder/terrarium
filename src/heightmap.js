@@ -27,22 +27,30 @@ class Heightmap {
       const z = x.clone().cross(a.clone().sub(b).normalize()).normalize();
       const y = x.clone().cross(z).normalize();
 
-      f.basis = {
+      f.faceBasis = {
         x: x,
         y: y,
         z: z,
       };
 
-      f.basisTransform = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeBasis(x, y, z))
-          .multiply(new THREE.Matrix4().makeTranslation(-a.x, -a.y, -a.z));
+      const translateMatrix = new THREE.Matrix4().makeTranslation(-a.x, -a.y, -a.z);
 
-      f.pointsInBasisSpace = [
-        a.clone().applyMatrix4(f.basisTransform),
-        b.clone().applyMatrix4(f.basisTransform),
-        c.clone().applyMatrix4(f.basisTransform),
+      f.fromFaceBasis = new THREE.Matrix4().makeBasis(x, y, z);
+
+      f.toFaceBasis = new THREE.Matrix4().getInverse(f.fromFaceBasis)
+          .multiply(translateMatrix);
+
+      f.fromFaceBasis = new THREE.Matrix4().makeTranslation(a.x, a.y, a.z).multiply(f.fromFaceBasis);
+
+      f.toPyramidBasis = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeBasis(a, b, c));
+
+      f.pointsInFaceSpace = [
+        a.clone().applyMatrix4(f.toFaceBasis),
+        b.clone().applyMatrix4(f.toFaceBasis),
+        c.clone().applyMatrix4(f.toFaceBasis),
       ];
 
-      console.log(f);
+      f.faceIndex = i;
     }.bind(this));
 
 
@@ -50,27 +58,17 @@ class Heightmap {
     this.geometry.computeBoundingBox();
   }
 
-  locateFace(cartesianCoords) {
-    return this.geometry.faces[0];
-  }
-
-  face(point) {
-    this.geometry.faces.forEach(function(f) {
-      if (this.inFace(point, f)) {
-        console.log(`${JSON.stringify(point)} is in ${JSON.stringify(f)}`);
+  locateFace(point) {
+    for(let i = 0; i < this.geometry.faces.length; ++i) {
+      if (this.inFace(point, this.geometry.faces[i])) {
+        return this.geometry.faces[i];
       }
-    }.bind(this));
+    }
   }
 
   inFace(point, face) {
-    const faceCoords = new THREE.Vector3(point.x, point.y, point.z).applyMatrix4(face.basisTransform);
-    //console.log(`facecoords: ${JSON.stringify(faceCoords)}`);
-
-    if(this.inTriangle(faceCoords, face.pointsInBasisSpace)) {
-      console.log(`facecoords: ${JSON.stringify(faceCoords)}`);
-      return true;
-    }
-    return false;
+    const pyramidCoords = new THREE.Vector3(point.x, point.y, point.z).applyMatrix4(face.toPyramidBasis);
+    return pyramidCoords.x >= 0 && pyramidCoords.y >= 0 && pyramidCoords.z >= 0;
   }
 
   inTriangle(point, tris) {
@@ -91,8 +89,11 @@ class Heightmap {
 
   placeOnSurface(cartesianCoords) {
     const face = this.locateFace(cartesianCoords);
-    console.log(`face for ${JSON.stringify(cartesianCoords)} is ${JSON.stringify(face)}`);
-    return face;
+    const faceCoords = cartesianCoords.clone().applyMatrix4(face.toFaceBasis);
+    faceCoords.z = 0.0;
+    const surfaceCoords = faceCoords.clone().applyMatrix4(face.fromFaceBasis);
+
+    return surfaceCoords;
   }
 }
 
