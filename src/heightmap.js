@@ -71,6 +71,15 @@ class Heightmap {
     return pyramidCoords.x >= 0 && pyramidCoords.y >= 0 && pyramidCoords.z >= 0;
   }
 
+  toFaceCoords(cartesianCoords) {
+    const face = this.locateFace(cartesianCoords);
+    return { face: face, uv: new THREE.Vector3(cartesianCoords.x, cartesianCoords.y, cartesianCoords.z).applyMatrix4(face.toFaceBasis) };
+  }
+
+  fromFaceCoords(faceCoords) {
+    return faceCoords.uv.clone().applyMatrix4(faceCoords.face.fromFaceBasis);
+  }
+
   inTriangle(point, tris) {
     const area = 0.5*(
       -tris[1].y*tris[2].x +

@@ -1,3 +1,5 @@
+import Random from 'random-seed';
+import Simplex from 'simplex-noise';
 import THREE from 'three.js';
 
 import Planet from './planet.js';
@@ -5,6 +7,7 @@ import PlanetMath from './planet-math.js';
 
 class Game {
   constructor(renderer) {
+    this.totalMillis = 0;
     this.renderer = renderer;
 
     this.scene = new THREE.Scene();
@@ -17,6 +20,7 @@ class Game {
     const nibbleMaterial = new THREE.MeshBasicMaterial({
       color: 0xffffff,
     });
+    this.nibbles = [];
     for(let i = 0; i < 50; ++i) {
       const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
       const nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
@@ -29,10 +33,15 @@ class Game {
         r: 1.0,
       });
       const nibbleSurfacePos = this.planet.placeOnSurface(new THREE.Vector3(nibblePos.x, nibblePos.y, nibblePos.z));
-      console.log(`found nibble pos: ${JSON.stringify(nibbleSurfacePos)} from ${JSON.stringify(nibblePos)}`);
+      //console.log(`found nibble pos: ${JSON.stringify(nibbleSurfacePos)} from ${JSON.stringify(nibblePos)}`);
       nibble.position.x = nibbleSurfacePos.x;
       nibble.position.y = nibbleSurfacePos.y;
       nibble.position.z = nibbleSurfacePos.z;
+
+      nibble.faceCoords = this.planet.toFaceCoords(nibbleSurfacePos);
+      nibble.simplex = new Simplex(Math.random);
+
+      this.nibbles.push(nibble);
       this.planet.waterSphere.add(nibble);
     }
   }
@@ -53,7 +62,18 @@ class Game {
   }
 
   update(millis) {
+    this.totalMillis += millis;
     this.planet.update(millis);
+
+    this.nibbles.forEach(function(nibble) {
+      const angle = nibble.simplex.noise3D(nibble.faceCoords.uv.x * 100, nibble.faceCoords.uv.y * 100, this.totalMillis / 10000);
+      nibble.faceCoords.uv.x += 0.001 * Math.cos(angle);
+      nibble.faceCoords.uv.y += 0.001 * Math.sin(angle);
+      const pos = this.planet.fromFaceCoords(nibble.faceCoords);
+      //console.log(`moving from ${JSON.stringify(nibble.position)} to ${JSON.stringify(pos)}`);
+      nibble.position.copy(pos);
+      nibble.updateMatrix();
+    }.bind(this));
   }
 
   render() {
@@ -66,8 +86,8 @@ class Game {
   }
 
   onKeyDown(event) {
-    this.planet.seed = Math.random();
-    this.planet.needsRegeneration = true;
+    //this.planet.seed = Math.random();
+    //this.planet.needsRegeneration = true;
   }
 
   onMouseDown(event) {
@@ -80,7 +100,7 @@ class Game {
   }
 
   onMouseMove(event) {
-    if(this.drag) {
+    if(this.drag && false) {
       const x = event.screenX - this.dragStartEvent.screenX;
       const y = event.screenY - this.dragStartEvent.screenY;
 

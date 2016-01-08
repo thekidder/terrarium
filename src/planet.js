@@ -1,7 +1,7 @@
 import _ from 'underscore';
+import Random from 'random-seed';
 import Simplex from 'simplex-noise';
 import THREE from 'three.js';
-import Random from 'random-seed';
 
 import Heightmap from './heightmap.js';
 import PlanetMath from './planet-math.js';
@@ -75,7 +75,7 @@ class Planet {
       return 1 + noise * m * 0.5;
     };
 
-    this.heightmap = new Heightmap(4, generationFunc);
+    this.heightmap = new Heightmap(3, generationFunc);
     this.sphere = new THREE.Mesh(this.heightmap.geometry, this.material);
 
     this.scene.add(this.sphere);
@@ -96,7 +96,7 @@ class Planet {
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 
-    this.rotation += 0.001 * millis;
+    //this.rotation += 0.001 * millis;
     this.sphere.rotation.y = this.rotation;
     this.waterSphere.rotation.y = this.rotation;
     this.t += millis;
@@ -108,6 +108,14 @@ class Planet {
 
   placeOnSurface(cartesianCoords) {
     return this.heightmap.placeOnSurface(cartesianCoords);
+  }
+
+  toFaceCoords(cartesianCoords) {
+    return this.heightmap.toFaceCoords(cartesianCoords);
+  }
+
+  fromFaceCoords(faceCoords) {
+    return this.heightmap.fromFaceCoords(faceCoords);
   }
 }
 
