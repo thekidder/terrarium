@@ -80,6 +80,18 @@ class Heightmap {
     return faceCoords.uv.clone().applyMatrix4(faceCoords.face.fromFaceBasis);
   }
 
+  updateFaceCoords(faceCoords) {
+    if (!this.inTriangle(faceCoords.uv, faceCoords.face.pointsInFaceSpace)) {
+      const cartesian = faceCoords.uv.clone().applyMatrix4(faceCoords.face.fromFaceBasis);
+      faceCoords.face = this.locateFace(cartesian);
+      faceCoords.uv = cartesian.applyMatrix4(faceCoords.face.toFaceBasis);
+      faceCoords.uv.z = 0.0;
+      return faceCoords;
+    } else {
+      return faceCoords;
+    }
+  }
+
   inTriangle(point, tris) {
     const area = 0.5*(
       -tris[1].y*tris[2].x +

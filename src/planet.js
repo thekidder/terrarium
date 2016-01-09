@@ -96,7 +96,7 @@ class Planet {
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 
-    //this.rotation += 0.001 * millis;
+    this.rotation += 0.0003 * millis;
     this.sphere.rotation.y = this.rotation;
     this.waterSphere.rotation.y = this.rotation;
     this.t += millis;
@@ -116,6 +116,10 @@ class Planet {
 
   fromFaceCoords(faceCoords) {
     return this.heightmap.fromFaceCoords(faceCoords);
+  }
+
+  updateFaceCoords(faceCoords) {
+    return this.heightmap.updateFaceCoords(faceCoords);
   }
 }
 
