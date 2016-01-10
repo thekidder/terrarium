@@ -67,8 +67,8 @@ class Game {
 
     this.nibbles.forEach(function(nibble) {
       const angle = nibble.simplex.noise3D(nibble.faceCoords.uv.x * 100, nibble.faceCoords.uv.y * 100, this.totalMillis / 20000);
-      nibble.faceCoords.uv.x += 0.0015 * Math.cos(angle);
-      nibble.faceCoords.uv.y += 0.0015 * Math.sin(angle);
+      nibble.faceCoords.uv.x += 0.002 * Math.cos(angle);
+      nibble.faceCoords.uv.y += 0.002 * Math.sin(angle);
       nibble.faceCoords = this.planet.updateFaceCoords(nibble.faceCoords);
       const pos = this.planet.fromFaceCoords(nibble.faceCoords);
       //console.log(`moving from ${JSON.stringify(nibble.position)} to ${JSON.stringify(pos)}`);
@@ -84,6 +84,12 @@ class Game {
   onResize(width, height) {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+  }
+
+  onFocus(event) {
+  }
+
+  onBlur(event) {
   }
 
   onKeyDown(event) {
