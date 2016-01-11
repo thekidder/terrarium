@@ -4,6 +4,7 @@ import Simplex from 'simplex-noise';
 import THREE from 'three.js';
 
 import Heightmap from './heightmap.js';
+import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 
 class Planet {
@@ -77,6 +78,9 @@ class Planet {
 
     this.heightmap = new Heightmap(3, generationFunc);
     this.sphere = new THREE.Mesh(this.heightmap.geometry, this.material);
+
+    this.navmesh = new Navmesh(this.heightmap.geometry);
+    this.navmesh.build();
 
     this.scene.add(this.sphere);
     this.needsRegeneration = false;
