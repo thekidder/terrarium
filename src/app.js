@@ -22,7 +22,7 @@ class App {
     this.game = new Game(this.renderer);
 
     // update and render loop boilerplate
-    this.timestepMillis = 10;
+    this.timestepMillis = 20;
     this.lastMillis = new Date().getTime();
     this.accumulatorMillis = 0;
 
