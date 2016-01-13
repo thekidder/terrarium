@@ -114,7 +114,15 @@ class Planet {
   }
 
   randomFace() {
-    return Math.floor(Math.random() * this.heightmap.geometry.faces.length);
+    while (true) {
+      const candidate = Math.floor(Math.random() * this.heightmap.geometry.faces.length);
+      const face = this.heightmap.geometry.faces[candidate];
+      if (this.heightmap.geometry.vertices[face.a].lengthSq() > 1 &&
+          this.heightmap.geometry.vertices[face.b].lengthSq() > 1 &&
+          this.heightmap.geometry.vertices[face.c].lengthSq() > 1) {
+        return candidate;
+      }
+    }
   }
 
   locateFace(point) {

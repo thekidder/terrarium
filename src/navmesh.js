@@ -10,6 +10,8 @@ class Navmesh {
   }
 
   build() {
+    let numConnections = 0;
+    const graphBuildStart = new Date().getTime();
     // first build a connectedness graph
     // for now we assume 3-way connectedness: e.g. two triangles are connected if they share at
     // least 2 vertices in common
@@ -28,18 +30,40 @@ class Navmesh {
         const testFace = this.geometry.faces[j];
         const testVertices = [testFace.a, testFace.b, testFace.c];
 
-        if (_.intersection(vertices, testVertices).length == 2) {
-          node.neighbors.add(j);
+        if (_.intersection(vertices, testVertices).length < 2) {
+          continue;
         }
+
+        const verticesAboveWater = _.reduce(
+            testVertices,
+            function(memo, v) {
+              return memo + (this.geometry.vertices[v].lengthSq() > 1 ? 1 : 0);
+            }.bind(this),
+            0);
+
+        if (verticesAboveWater < 2) {
+          continue;
+        }
+
+        node.neighbors.add(j);
+        ++numConnections;
       }
       nodes.set(i, node);
     }
 
     this.nodes = nodes;
 
+    const graphBuildEnd = new Date().getTime();
+
+    console.log(`Took ${graphBuildEnd - graphBuildStart}ms to build graph with ${numConnections} connections`);
+
     for (let i = 0; i < this.geometry.faces.length; ++i) {
       this.buildHeuristic(i);
     }
+
+    const heuristicBuildEnd = new Date().getTime();
+
+    console.log(`Took ${heuristicBuildEnd - graphBuildEnd}ms to build heuristic function`);
   }
 
   // build our A* heuristic. Do a breadth-first search over all nodes to find the distance
@@ -68,6 +92,11 @@ class Navmesh {
   findPath(from, to) {
     const path = [];
     const parents = this.collectPath(from, to);
+
+    if (!parents) {
+      return null;
+    }
+
     while (from !== to) {
       path.push(to);
       to = parents.get(to);
@@ -102,6 +131,7 @@ class Navmesh {
         open.add(next);
       }
     }
+    return null;
   }
 
   getH(from, to) {
