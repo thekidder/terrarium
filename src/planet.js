@@ -107,12 +107,14 @@ class Planet {
   }
 
   findPath() {
-    const min = 0;
-    const max = this.heightmap.geometry.faces.length;
-    const start = Math.floor(Math.random() * (max - min) + min);
-    const end = Math.floor(Math.random() * (max - min) + min);
+    const start = this.randomFace();
+    const end = this.randomFace();
 
     console.log(`path from ${start} to ${end}: ${this.navmesh.findPath(start, end)}`);
+  }
+
+  randomFace() {
+    return Math.floor(Math.random() * this.heightmap.geometry.faces.length);
   }
 
   locateFace(point) {
