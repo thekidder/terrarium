@@ -36,5 +36,8 @@
     "underscore": "^1.8.3",
     "webpack": "^1.12.9",
     "webpack-dev-server": "^1.14.0"
+  },
+  "dependencies": {
+    "es-collections": "0.0.2"
   }
 }

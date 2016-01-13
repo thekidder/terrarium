@@ -30,10 +30,10 @@ class App {
   }
 
   setEventListeners() {
-    document.onkeydown   = this.game.onKeyDown;
-    document.onmousedown = this.game.onMouseDown;
-    document.onmouseup   = this.game.onMouseUp;
-    document.onmousemove = this.game.onMouseMove;
+    document.onkeydown   = this.game.onKeyDown.bind(this.game);
+    document.onmousedown = this.game.onMouseDown.bind(this.game);
+    document.onmouseup   = this.game.onMouseUp.bind(this.game);
+    document.onmousemove = this.game.onMouseMove.bind(this.game);
 
     window.onresize      = this.onResize.bind(this);
     window.onfocus       = this.onFocus.bind(this);

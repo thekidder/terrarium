@@ -95,6 +95,7 @@ class Game {
   onKeyDown(event) {
     //this.planet.seed = Math.random();
     //this.planet.needsRegeneration = true;
+    this.planet.findPath();
   }
 
   onMouseDown(event) {
