@@ -17,5 +17,8 @@ module.exports = {
       { test: /\.js$/, loader: 'babel?presets[]=es2015', exclude: /node_modules/ },
       { test: /\.js$/, loader: 'eslint-loader', exclude: /node_modules/ }
     ]
-  }
+  },
+  plugins: [
+    //new webpack.optimize.UglifyJsPlugin(),
+  ],
 };
