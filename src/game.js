@@ -33,21 +33,23 @@ class Game {
     const startMarker = new THREE.Mesh(nibbleGeometry, startMaterial);
     const endMarker = new THREE.Mesh(nibbleGeometry, endMaterial);
 
-    const nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
+    this.nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
 
-    let path = null;
-    while (path == null) {
-      path = this.planet.findPath();
+    this.path = null;
+    while (this.path == null) {
+      this.path = this.planet.findPath();
     }
 
-    startMarker.position.copy(this.planet.faceCentroid(path[0]));
-    nibble.position.copy(this.planet.faceCentroid(path[0]));
-    endMarker.position.copy(this.planet.faceCentroid(path[path.length - 1]));
+    this.pathIndex = 0;
+
+    startMarker.position.copy(this.planet.faceCentroid(this.path[0]));
+    this.nibble.position.copy(this.planet.faceCentroid(this.path[0]));
+    endMarker.position.copy(this.planet.faceCentroid(this.path[this.path.length - 1]));
 
     this.planet.sphere.add(startMarker);
     this.planet.sphere.add(endMarker);
 
-    this.planet.sphere.add(nibble);
+    this.planet.sphere.add(this.nibble);
   }
 
   populateScene() {
@@ -68,6 +70,31 @@ class Game {
   update(millis) {
     this.totalMillis += millis;
     this.planet.update(millis);
+
+    while (this.pathIndex < this.path.length &&
+        !this.planet.inFace(this.nibble.position, this.path[this.pathIndex])) {
+      ++this.pathIndex;
+    }
+
+    if (this.pathIndex == this.path.length - 1) {
+      console.log('done');
+      return;
+    }
+
+    if (this.pathIndex == this.path.length) {
+      console.log('diverted');
+      return;
+    }
+
+
+    const dest = this.planet.findCentroid(this.path[this.pathIndex], this.path[this.pathIndex + 1]);
+
+    const velocity = dest.clone()
+        .sub(this.nibble.position)
+        .normalize()
+        .multiplyScalar(0.02 * millis);
+
+    this.nibble.position.add(velocity);
   }
 
   render() {
@@ -88,7 +115,6 @@ class Game {
   onKeyDown(event) {
     //this.planet.seed = Math.random();
     //this.planet.needsRegeneration = true;
-    this.planet.findPath();
   }
 
   onMouseDown(event) {

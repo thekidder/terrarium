@@ -127,6 +127,14 @@ class Planet {
     }
   }
 
+  inFace(point, faceIndex) {
+    return this.heightmap.inFace(point, this.heightmap.geometry.faces[faceIndex]);
+  }
+
+  findCentroid(from, to) {
+    return this.navmesh.findCentroid(from, to);
+  }
+
   locateFace(point) {
     return this.heightmap.locateFace(point);
   }

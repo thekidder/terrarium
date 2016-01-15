@@ -21,7 +21,7 @@ class Navmesh {
       const face = this.geometry.faces[i];
       const vertices = [face.a, face.b, face.c];
       const node = {};
-      node.neighbors = new Set();
+      node.neighbors = [];
       for (let j = 0; j < this.geometry.faces.length; ++j) {
         if (i == j) {
           continue;
@@ -30,7 +30,9 @@ class Navmesh {
         const testFace = this.geometry.faces[j];
         const testVertices = [testFace.a, testFace.b, testFace.c];
 
-        if (_.intersection(vertices, testVertices).length < 2) {
+        const sharedVerts = _.intersection(vertices, testVertices);
+
+        if (sharedVerts.length < 2) {
           continue;
         }
 
@@ -45,7 +47,11 @@ class Navmesh {
           continue;
         }
 
-        node.neighbors.add(j);
+        const centroid = this.geometry.vertices[sharedVerts[0]].clone()
+            .add(sharedVerts[1])
+            .multiplyScalar(0.5);
+
+        node.neighbors.push({index: j, centroid: centroid});
         ++numConnections;
       }
       nodes.set(i, node);
@@ -66,6 +72,10 @@ class Navmesh {
     console.log(`Took ${heuristicBuildEnd - graphBuildEnd}ms to build heuristic function`);
   }
 
+  findCentroid(from, to) {
+    return _.findWhere(this.nodes.get(from).neighbors, {index: to}).centroid;
+  }
+
   // build our A* heuristic. Do a breadth-first search over all nodes to find the distance
   // (in number of nodes) to every other node.
   buildHeuristic(nodeIndex) {
@@ -78,9 +88,9 @@ class Navmesh {
     while(next.length > 0) {
       const node = next.shift();
       for (const neighbor of this.nodes.get(node.node).neighbors) {
-        if (!visited.has(neighbor)) {
-          next.push({node: neighbor, distance: node.distance + 1});
-          visited.add(neighbor);
+        if (!visited.has(neighbor.index)) {
+          next.push({node: neighbor.index, distance: node.distance + 1});
+          visited.add(neighbor.index);
         }
       }
 
@@ -124,10 +134,10 @@ class Navmesh {
       closed.add(current.node);
 
       for(const neighbor of this.nodes.get(current.node).neighbors) {
-        if (closed.has(neighbor)) continue;
+        if (closed.has(neighbor.index)) continue;
         const currentCost = current.g + 1;
-        const next = {node: neighbor, g: currentCost, f: currentCost + this.getH(neighbor, to)};
-        parents.set(neighbor, current.node);
+        const next = {node: neighbor.index, g: currentCost, f: currentCost + this.getH(neighbor.index, to)};
+        parents.set(neighbor.index, current.node);
         open.add(next);
       }
     }
