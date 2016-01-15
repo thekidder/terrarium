@@ -25,9 +25,15 @@ class Game {
       color: 0xff0000,
     });
 
+    const nibbleMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+    });
+
     const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
     const startMarker = new THREE.Mesh(nibbleGeometry, startMaterial);
     const endMarker = new THREE.Mesh(nibbleGeometry, endMaterial);
+
+    const nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
 
     let path = null;
     while (path == null) {
@@ -35,10 +41,13 @@ class Game {
     }
 
     startMarker.position.copy(this.planet.faceCentroid(path[0]));
+    nibble.position.copy(this.planet.faceCentroid(path[0]));
     endMarker.position.copy(this.planet.faceCentroid(path[path.length - 1]));
 
     this.planet.sphere.add(startMarker);
     this.planet.sphere.add(endMarker);
+
+    this.planet.sphere.add(nibble);
   }
 
   populateScene() {
