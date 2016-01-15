@@ -116,6 +116,14 @@ class Heightmap {
 
     return surfaceCoords;
   }
+
+  faceCentroid(faceIndex) {
+    const face = this.geometry.faces[faceIndex];
+    return this.geometry.vertices[face.a].clone()
+        .add(this.geometry.vertices[face.b])
+        .add(this.geometry.vertices[face.c])
+        .multiplyScalar(1 / 3);
+  }
 }
 
 export default Heightmap;

@@ -17,33 +17,28 @@ class Game {
     this.populateScene();
     this.planet = new Planet(this.scene);
 
-    const nibbleMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+    const startMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
     });
-    this.nibbles = [];
-    for(let i = 0; i < 50; ++i) {
-      const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
-      const nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
-      const nibbleTheta = Math.random() * Math.PI * 2;
-      const nibblePhi = Math.random() * Math.PI;
 
-      const nibblePos = PlanetMath.sphericalToCartesian({
-        theta: nibbleTheta,
-        phi: nibblePhi,
-        r: 1.0,
-      });
-      const nibbleSurfacePos = this.planet.placeOnSurface(new THREE.Vector3(nibblePos.x, nibblePos.y, nibblePos.z));
-      //console.log(`found nibble pos: ${JSON.stringify(nibbleSurfacePos)} from ${JSON.stringify(nibblePos)}`);
-      nibble.position.x = nibbleSurfacePos.x;
-      nibble.position.y = nibbleSurfacePos.y;
-      nibble.position.z = nibbleSurfacePos.z;
+    const endMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+    });
 
-      nibble.faceCoords = this.planet.toFaceCoords(nibbleSurfacePos);
-      nibble.simplex = new Simplex(Math.random);
+    const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
+    const startMarker = new THREE.Mesh(nibbleGeometry, startMaterial);
+    const endMarker = new THREE.Mesh(nibbleGeometry, endMaterial);
 
-      this.nibbles.push(nibble);
-      this.planet.waterSphere.add(nibble);
+    let path = null;
+    while (path == null) {
+      path = this.planet.findPath();
     }
+
+    startMarker.position.copy(this.planet.faceCentroid(path[0]));
+    endMarker.position.copy(this.planet.faceCentroid(path[path.length - 1]));
+
+    this.planet.sphere.add(startMarker);
+    this.planet.sphere.add(endMarker);
   }
 
   populateScene() {
@@ -64,17 +59,6 @@ class Game {
   update(millis) {
     this.totalMillis += millis;
     this.planet.update(millis);
-
-    this.nibbles.forEach(function(nibble) {
-      const angle = nibble.simplex.noise3D(nibble.faceCoords.uv.x * 100, nibble.faceCoords.uv.y * 100, this.totalMillis / 20000);
-      nibble.faceCoords.uv.x += 0.002 * Math.cos(angle);
-      nibble.faceCoords.uv.y += 0.002 * Math.sin(angle);
-      nibble.faceCoords = this.planet.updateFaceCoords(nibble.faceCoords);
-      const pos = this.planet.fromFaceCoords(nibble.faceCoords);
-      //console.log(`moving from ${JSON.stringify(nibble.position)} to ${JSON.stringify(pos)}`);
-      nibble.position.copy(pos);
-      nibble.updateMatrix();
-    }.bind(this));
   }
 
   render() {

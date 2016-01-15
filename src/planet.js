@@ -110,7 +110,9 @@ class Planet {
     const start = this.randomFace();
     const end = this.randomFace();
 
-    console.log(`path from ${start} to ${end}: ${this.navmesh.findPath(start, end)}`);
+    const path = this.navmesh.findPath(start, end);
+    console.log(`path from ${start} to ${end}: ${path}`);
+    return path;
   }
 
   randomFace() {
@@ -143,6 +145,10 @@ class Planet {
 
   updateFaceCoords(faceCoords) {
     return this.heightmap.updateFaceCoords(faceCoords);
+  }
+
+  faceCentroid(faceIndex) {
+    return this.heightmap.faceCentroid(faceIndex);
   }
 }
 
