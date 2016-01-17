@@ -89,7 +89,6 @@ class Game {
   update(millis) {
     const pos = this.nibble.position.clone()
         .normalize().multiplyScalar(3);
-    //console.log(pos);
 
     this.camera.position.copy(pos);
     this.camera.up = new THREE.Vector3(0,0,1);
