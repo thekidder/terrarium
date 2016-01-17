@@ -106,6 +106,10 @@ class Planet {
     this.t += millis;
   }
 
+  connectedness(node) {
+    return this.navmesh.connectedness(node);
+  }
+
   findPath(from) {
     let start = from;
     if (!start) {

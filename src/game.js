@@ -88,7 +88,7 @@ class Game {
 
   update(millis) {
     const pos = this.nibble.position.clone()
-        .normalize().multiplyScalar(7);
+        .normalize().multiplyScalar(3);
     //console.log(pos);
 
     this.camera.position.copy(pos);
@@ -131,6 +131,8 @@ class Game {
     while (this.path == null) {
       this.path = this.planet.findPath(from);
     }
+
+    console.log(`node ${this.path[0]} is connected to ${this.planet.connectedness(this.path[0])} other nodes`);
 
     this.pathIndex = 0;
 

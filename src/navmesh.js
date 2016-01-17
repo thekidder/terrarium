@@ -72,6 +72,10 @@ class Navmesh {
     console.log(`Took ${heuristicBuildEnd - graphBuildEnd}ms to build heuristic function`);
   }
 
+  connectedness(node) {
+    return this.nodes.get(node).h.size;
+  }
+
   findCentroid(from, to) {
     return _.findWhere(this.nodes.get(from).neighbors, {index: to}).centroid;
   }
