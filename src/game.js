@@ -45,14 +45,41 @@ class Game {
   }
 
   populateScene() {
-    const lights = [];
-    lights[0] = new THREE.PointLight(0xffffff, 12, 300, 2);
-    lights[1] = new THREE.PointLight(0xffffff, 12, 300, 2);
-    lights[2] = new THREE.PointLight(0xffffff, 12, 300, 2);
+    const light1Material = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+    });
 
-    lights[0].position.set(0, 200, 0);
-    lights[1].position.set(100, 200, 100);
-    lights[2].position.set(-100, -200, -100);
+    const light2Material = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+    });
+
+    const light3Material = new THREE.MeshBasicMaterial({
+      color: 0x0000ff,
+    });
+
+    const lightGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+    const light1 = new THREE.Mesh(lightGeometry, light1Material);
+    light1.position.set(0, 4, 0);
+
+    const light2 = new THREE.Mesh(lightGeometry, light2Material);
+    light2.position.set(3, 3, 3);
+
+    const light3 = new THREE.Mesh(lightGeometry, light3Material);
+    light3.position.set(-3, -3, -3);
+
+
+    const lights = [];
+    lights[0] = new THREE.PointLight(0xffffff, 1, 300, 2);
+    lights[1] = new THREE.PointLight(0xffffff, 1, 300, 2);
+    lights[2] = new THREE.PointLight(0xffffff, 1, 300, 2);
+
+    lights[0].position.copy(light1.position);
+    lights[1].position.copy(light2.position);
+    lights[2].position.copy(light3.position);
+
+    this.scene.add(light1);
+    this.scene.add(light2);
+    this.scene.add(light3);
 
     this.scene.add(lights[0]);
     this.scene.add(lights[1]);
@@ -61,7 +88,7 @@ class Game {
 
   update(millis) {
     const pos = this.nibble.position.clone()
-        .normalize().multiplyScalar(2.5);
+        .normalize().multiplyScalar(7);
     //console.log(pos);
 
     this.camera.position.copy(pos);
