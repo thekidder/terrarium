@@ -46,9 +46,9 @@ class Game {
 
   populateScene() {
     const lights = [];
-    lights[0] = new THREE.PointLight(0xffffff, 1, 0);
-    lights[1] = new THREE.PointLight(0xffffff, 1, 0);
-    lights[2] = new THREE.PointLight(0xffffff, 1, 0);
+    lights[0] = new THREE.PointLight(0xffffff, 12, 300, 2);
+    lights[1] = new THREE.PointLight(0xffffff, 12, 300, 2);
+    lights[2] = new THREE.PointLight(0xffffff, 12, 300, 2);
 
     lights[0].position.set(0, 200, 0);
     lights[1].position.set(100, 200, 100);
