@@ -100,14 +100,17 @@ class Planet {
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 
-    this.rotation += 0.0003 * millis;
+    // this.rotation += 0.0003 * millis;
     this.sphere.rotation.y = this.rotation;
     this.waterSphere.rotation.y = this.rotation;
     this.t += millis;
   }
 
-  findPath() {
-    const start = this.randomFace();
+  findPath(from) {
+    let start = from;
+    if (!start) {
+      start = this.randomFace();
+    }
     const end = this.randomFace();
 
     const path = this.navmesh.findPath(start, end);

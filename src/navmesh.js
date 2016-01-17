@@ -48,7 +48,7 @@ class Navmesh {
         }
 
         const centroid = this.geometry.vertices[sharedVerts[0]].clone()
-            .add(sharedVerts[1])
+            .add(this.geometry.vertices[sharedVerts[1]])
             .multiplyScalar(0.5);
 
         node.neighbors.push({index: j, centroid: centroid});

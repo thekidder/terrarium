@@ -12,7 +12,6 @@ class Game {
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 ); // aspect will get set in onResize
-    this.camera.position.z = 2.5;
 
     this.populateScene();
     this.planet = new Planet(this.scene);
@@ -30,26 +29,19 @@ class Game {
     });
 
     const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
-    const startMarker = new THREE.Mesh(nibbleGeometry, startMaterial);
-    const endMarker = new THREE.Mesh(nibbleGeometry, endMaterial);
+    this.startMarker = new THREE.Mesh(nibbleGeometry, startMaterial);
+    this.endMarker = new THREE.Mesh(nibbleGeometry, endMaterial);
 
     this.nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
 
-    this.path = null;
-    while (this.path == null) {
-      this.path = this.planet.findPath();
-    }
-
-    this.pathIndex = 0;
-
-    startMarker.position.copy(this.planet.faceCentroid(this.path[0]));
-    this.nibble.position.copy(this.planet.faceCentroid(this.path[0]));
-    endMarker.position.copy(this.planet.faceCentroid(this.path[this.path.length - 1]));
-
-    this.planet.sphere.add(startMarker);
-    this.planet.sphere.add(endMarker);
-
+    this.planet.sphere.add(this.startMarker);
+    this.planet.sphere.add(this.endMarker);
     this.planet.sphere.add(this.nibble);
+
+    this.findPath();
+    this.nibble.position.copy(this.planet.faceCentroid(this.path[0]));
+
+    this.camera.position.z = 2.5;
   }
 
   populateScene() {
@@ -68,6 +60,14 @@ class Game {
   }
 
   update(millis) {
+    const pos = this.nibble.position.clone()
+        .normalize().multiplyScalar(2.5);
+    //console.log(pos);
+
+    this.camera.position.copy(pos);
+    this.camera.up = new THREE.Vector3(0,0,1);
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+
     this.totalMillis += millis;
     this.planet.update(millis);
 
@@ -78,23 +78,37 @@ class Game {
 
     if (this.pathIndex == this.path.length - 1) {
       console.log('done');
+      this.findPath();
       return;
     }
 
     if (this.pathIndex == this.path.length) {
       console.log('diverted');
+      console.log(`face: ${this.planet.locateFace(this.nibble.position).faceIndex}`);
       return;
     }
-
 
     const dest = this.planet.findCentroid(this.path[this.pathIndex], this.path[this.pathIndex + 1]);
 
     const velocity = dest.clone()
         .sub(this.nibble.position)
         .normalize()
-        .multiplyScalar(0.02 * millis);
+        .multiplyScalar(0.0003 * millis);
 
     this.nibble.position.add(velocity);
+  }
+
+  findPath() {
+    const from = !!this.path ? this.path[this.path.length - 1]: null;
+    this.path = null;
+    while (this.path == null) {
+      this.path = this.planet.findPath(from);
+    }
+
+    this.pathIndex = 0;
+
+    this.startMarker.position.copy(this.planet.faceCentroid(this.path[0]));
+    this.endMarker.position.copy(this.planet.faceCentroid(this.path[this.path.length - 1]));
   }
 
   render() {
