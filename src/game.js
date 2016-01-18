@@ -42,6 +42,7 @@ class Game {
     this.nibble.position.copy(this.planet.faceCentroid(this.path[0]));
 
     this.camera.position.z = 2.5;
+    this.velocity = new THREE.Vector3();
   }
 
   populateScene() {
@@ -116,12 +117,20 @@ class Game {
 
     const dest = this.planet.findCentroid(this.path[this.pathIndex], this.path[this.pathIndex + 1]);
 
-    const velocity = dest.clone()
+    const accel = 0.00001;
+    const direction = dest.clone()
         .sub(this.nibble.position)
         .normalize()
-        .multiplyScalar(0.0003 * millis);
+        .multiplyScalar(accel * millis);
 
-    this.nibble.position.add(velocity);
+    this.velocity.add(direction);
+
+    const speed = 0.003;
+    if (this.velocity.lengthSq() > speed * speed) {
+      this.velocity.normalize().multiplyScalar(speed);
+    }
+
+    this.nibble.position.add(this.velocity);
   }
 
   findPath() {
