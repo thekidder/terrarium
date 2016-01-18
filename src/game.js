@@ -70,8 +70,8 @@ class Game {
 
 
     const lights = [];
-    lights[0] = new THREE.PointLight(0xffffff, 1, 300, 2);
-    lights[1] = new THREE.PointLight(0xffffff, 1, 300, 2);
+    lights[0] = new THREE.PointLight(0xffffff, 0.8, 300, 2);
+    lights[1] = new THREE.PointLight(0xffffff, 0.8, 300, 2);
     lights[2] = new THREE.PointLight(0xffffff, 1, 300, 2);
 
     lights[0].position.copy(light1.position);
