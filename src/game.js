@@ -2,6 +2,7 @@ import Random from 'random-seed';
 import Simplex from 'simplex-noise';
 import THREE from 'three.js';
 
+import Debug from './debug.js';
 import Planet from './planet.js';
 import PlanetMath from './planet-math.js';
 
@@ -16,76 +17,36 @@ class Game {
     this.populateScene();
     this.planet = new Planet(this.scene);
 
-    const startMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
-    });
+    this.pathMarkers = [];
+    // positions will be set when path is found
+    this.startMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0x00ff00);
+    this.endMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0xff0000);
 
-    const endMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
-    });
+    this.findPath();
 
-    const nibbleMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-    });
-
-    const nibbleGeometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
-    this.startMarker = new THREE.Mesh(nibbleGeometry, startMaterial);
-    this.endMarker = new THREE.Mesh(nibbleGeometry, endMaterial);
-
-    this.nibble = new THREE.Mesh(nibbleGeometry, nibbleMaterial);
+    this.nibble = Debug.createMarker(this.planet.faceCentroid(this.path[0]), 0.02, 0xffffff);
 
     this.planet.sphere.add(this.startMarker);
     this.planet.sphere.add(this.endMarker);
     this.planet.sphere.add(this.nibble);
-
-    this.pathMarkers = [];
-    this.findPath();
-    this.nibble.position.copy(this.planet.faceCentroid(this.path[0]));
 
     this.camera.position.z = 2.5;
     this.velocity = new THREE.Vector3();
   }
 
   populateScene() {
-    const light1Material = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
-    });
+    const lights = [
+      { intensity: 0.8, position: new THREE.Vector3(0, 4, 0), debugColor: 0xff0000 },
+      { intensity: 0.8, position: new THREE.Vector3(3, 3, 3), debugColor: 0x00ff00 },
+      { intensity: 0.9, position: new THREE.Vector3(-3, -3, -3), debugColor: 0x0000ff },
+    ];
 
-    const light2Material = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
-    });
-
-    const light3Material = new THREE.MeshBasicMaterial({
-      color: 0x0000ff,
-    });
-
-    const lightGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
-    const light1 = new THREE.Mesh(lightGeometry, light1Material);
-    light1.position.set(0, 4, 0);
-
-    const light2 = new THREE.Mesh(lightGeometry, light2Material);
-    light2.position.set(3, 3, 3);
-
-    const light3 = new THREE.Mesh(lightGeometry, light3Material);
-    light3.position.set(-3, -3, -3);
-
-
-    const lights = [];
-    lights[0] = new THREE.PointLight(0xffffff, 0.8, 300, 2);
-    lights[1] = new THREE.PointLight(0xffffff, 0.8, 300, 2);
-    lights[2] = new THREE.PointLight(0xffffff, 1, 300, 2);
-
-    lights[0].position.copy(light1.position);
-    lights[1].position.copy(light2.position);
-    lights[2].position.copy(light3.position);
-
-    this.scene.add(light1);
-    this.scene.add(light2);
-    this.scene.add(light3);
-
-    this.scene.add(lights[0]);
-    this.scene.add(lights[1]);
-    this.scene.add(lights[2]);
+    for (const lightInfo of lights) {
+      this.scene.add(Debug.createMarker(lightInfo.position, 0.05, lightInfo.debugColor));
+      const light = new THREE.PointLight(0xffffff, lightInfo.intensity, 300, 2);
+      light.position.copy(lightInfo.position);
+      this.scene.add(light);
+    }
   }
 
   update(millis) {
@@ -150,25 +111,19 @@ class Game {
     this.startMarker.position.copy(this.planet.faceCentroid(this.path[0]));
     this.endMarker.position.copy(this.planet.faceCentroid(this.path[this.path.length - 1]));
 
-    // draw path visualization
-    const pathMarkerMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff00ff,
-    });
-
-    const pathMarkerGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-
+    // remove old path visualization
     for (const marker of this.pathMarkers) {
       this.scene.remove(marker);
     }
+    // draw new path visualization
     this.pathMarkers = [];
     for (const faceIndex of this.path) {
-      const marker = new THREE.Mesh(pathMarkerGeometry, pathMarkerMaterial);
       const face = this.planet.heightmap.geometry.faces[faceIndex];
       const pos = this.planet.heightmap.geometry.vertices[face.a].clone()
           .add(this.planet.heightmap.geometry.vertices[face.b])
           .add(this.planet.heightmap.geometry.vertices[face.c])
           .multiplyScalar(1 / 3);
-      marker.position.copy(pos);
+      const marker = Debug.createMarker(pos, 0.01, 0xff00ff);
       this.pathMarkers.push(marker);
       this.scene.add(marker);
     }
