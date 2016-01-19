@@ -38,7 +38,7 @@ class Game {
     const lights = [
       { intensity: 0.8, position: new THREE.Vector3(0, 4, 0), debugColor: 0xff0000 },
       { intensity: 0.8, position: new THREE.Vector3(3, 3, 3), debugColor: 0x00ff00 },
-      { intensity: 0.9, position: new THREE.Vector3(-3, -3, -3), debugColor: 0x0000ff },
+      { intensity: 0.8, position: new THREE.Vector3(-3, -3, -3), debugColor: 0x0000ff },
     ];
 
     for (const lightInfo of lights) {
@@ -51,7 +51,7 @@ class Game {
 
   update(millis) {
     const pos = this.nibble.position.clone()
-        .normalize().multiplyScalar(3);
+        .normalize().multiplyScalar(6);
 
     this.camera.position.copy(pos);
     this.camera.up = new THREE.Vector3(0,0,1);
