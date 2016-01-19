@@ -38,6 +38,7 @@ class Game {
     this.planet.sphere.add(this.endMarker);
     this.planet.sphere.add(this.nibble);
 
+    this.pathMarkers = [];
     this.findPath();
     this.nibble.position.copy(this.planet.faceCentroid(this.path[0]));
 
@@ -98,6 +99,8 @@ class Game {
     this.totalMillis += millis;
     this.planet.update(millis);
 
+    const oldFace = this.pathIndex;
+
     while (this.pathIndex < this.path.length &&
         !this.planet.inFace(this.nibble.position, this.path[this.pathIndex])) {
       ++this.pathIndex;
@@ -146,6 +149,29 @@ class Game {
 
     this.startMarker.position.copy(this.planet.faceCentroid(this.path[0]));
     this.endMarker.position.copy(this.planet.faceCentroid(this.path[this.path.length - 1]));
+
+    // draw path visualization
+    const pathMarkerMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff00ff,
+    });
+
+    const pathMarkerGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+
+    for (const marker of this.pathMarkers) {
+      this.scene.remove(marker);
+    }
+    this.pathMarkers = [];
+    for (const faceIndex of this.path) {
+      const marker = new THREE.Mesh(pathMarkerGeometry, pathMarkerMaterial);
+      const face = this.planet.heightmap.geometry.faces[faceIndex];
+      const pos = this.planet.heightmap.geometry.vertices[face.a].clone()
+          .add(this.planet.heightmap.geometry.vertices[face.b])
+          .add(this.planet.heightmap.geometry.vertices[face.c])
+          .multiplyScalar(1 / 3);
+      marker.position.copy(pos);
+      this.pathMarkers.push(marker);
+      this.scene.add(marker);
+    }
   }
 
   render() {

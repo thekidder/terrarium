@@ -76,6 +76,10 @@ class Navmesh {
     return this.nodes.get(node).h.size;
   }
 
+  neighbors(node) {
+    return this.nodes.get(node).neighbors;
+  }
+
   findCentroid(from, to) {
     return _.findWhere(this.nodes.get(from).neighbors, {index: to}).centroid;
   }
