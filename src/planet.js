@@ -110,12 +110,14 @@ class Planet {
     return this.navmesh.connectedness(node);
   }
 
-  findPath(from) {
-    let start = from;
+  findPath(start, end) {
     if (!start) {
       start = this.randomFace();
     }
-    const end = this.randomFace();
+
+    if (!end) {
+      end = this.randomFace();
+    }
 
     const path = this.navmesh.findPath(start, end);
     console.log(`path from ${start} to ${end}: ${path}`);

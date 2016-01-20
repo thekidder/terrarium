@@ -51,7 +51,7 @@ class Game {
 
   update(millis) {
     const pos = this.nibble.position.clone()
-        .normalize().multiplyScalar(6);
+        .normalize().multiplyScalar(3);
 
     this.camera.position.copy(pos);
     this.camera.up = new THREE.Vector3(0,0,1);
@@ -75,13 +75,15 @@ class Game {
 
     if (this.pathIndex == this.path.length) {
       console.log('diverted');
-      console.log(`face: ${this.planet.locateFace(this.nibble.position).faceIndex}`);
+      this.findPath(
+          this.planet.locateFace(this.nibble.position).faceIndex,
+          this.path[this.path.length - 1]);
       return;
     }
 
     const dest = this.planet.findCentroid(this.path[this.pathIndex], this.path[this.pathIndex + 1]);
 
-    const accel = 0.00001;
+    const accel = 0.000015;
     const direction = dest.clone()
         .sub(this.nibble.position)
         .normalize()
@@ -89,7 +91,7 @@ class Game {
 
     this.velocity.add(direction);
 
-    const speed = 0.003;
+    const speed = 0.005;
     if (this.velocity.lengthSq() > speed * speed) {
       this.velocity.normalize().multiplyScalar(speed);
     }
@@ -97,11 +99,11 @@ class Game {
     this.nibble.position.add(this.velocity);
   }
 
-  findPath() {
-    const from = !!this.path ? this.path[this.path.length - 1]: null;
+  findPath(start, end) {
+    start = start || (!!this.path ? this.path[this.path.length - 1]: null);
     this.path = null;
     while (this.path == null) {
-      this.path = this.planet.findPath(from);
+      this.path = this.planet.findPath(start, end);
     }
 
     console.log(`node ${this.path[0]} is connected to ${this.planet.connectedness(this.path[0])} other nodes`);
