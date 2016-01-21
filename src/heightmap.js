@@ -44,11 +44,10 @@ class Heightmap {
 
       f.toPyramidBasis = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeBasis(a, b, c));
 
-      f.pointsInFaceSpace = [
-        a.clone().applyMatrix4(f.toFaceBasis),
-        b.clone().applyMatrix4(f.toFaceBasis),
-        c.clone().applyMatrix4(f.toFaceBasis),
-      ];
+      f.pointsInFaceSpace = new Map();
+      f.pointsInFaceSpace.set(f.a, a.clone().applyMatrix4(f.toFaceBasis));
+      f.pointsInFaceSpace.set(f.b, b.clone().applyMatrix4(f.toFaceBasis));
+      f.pointsInFaceSpace.set(f.c, c.clone().applyMatrix4(f.toFaceBasis));
 
       f.faceIndex = i;
     }.bind(this));
@@ -81,7 +80,7 @@ class Heightmap {
   }
 
   updateFaceCoords(faceCoords) {
-    if (!this.inTriangle(faceCoords.uv, faceCoords.face.pointsInFaceSpace)) {
+    if (!this.inTriangle(faceCoords.uv, faceCoords.face.pointsInFaceSpace.values())) {
       const cartesian = faceCoords.uv.clone().applyMatrix4(faceCoords.face.fromFaceBasis);
       faceCoords.face = this.locateFace(cartesian);
       faceCoords.uv = cartesian.applyMatrix4(faceCoords.face.toFaceBasis);

@@ -10,18 +10,17 @@ class Navmesh {
   }
 
   build() {
-    let numConnections = 0;
     const graphBuildStart = new Date().getTime();
     // first build a connectedness graph
     // for now we assume 3-way connectedness: e.g. two triangles are connected if they share at
     // least 2 vertices in common
-    const nodes = new Map();
+    this.nodes = new Map();
 
     for (let i = 0; i < this.geometry.faces.length; ++i) {
       const face = this.geometry.faces[i];
       const vertices = [face.a, face.b, face.c];
       const node = {};
-      node.neighbors = [];
+      node.adjacentNodes = [];
       for (let j = 0; j < this.geometry.faces.length; ++j) {
         if (i == j) {
           continue;
@@ -36,35 +35,22 @@ class Navmesh {
           continue;
         }
 
-        const verticesAboveWater = _.reduce(
-            testVertices,
-            function(memo, v) {
-              return memo + (this.geometry.vertices[v].lengthSq() > 1 ? 1 : 0);
-            }.bind(this),
-            0);
-
-        if (verticesAboveWater < 2) {
-          continue;
-        }
-
-        const centroid = this.geometry.vertices[sharedVerts[0]].clone()
-            .add(this.geometry.vertices[sharedVerts[1]])
-            .multiplyScalar(0.5);
-
-        node.neighbors.push({index: j, centroid: centroid});
-        ++numConnections;
+        node.adjacentNodes.push({index: j, sharedVertices: sharedVerts});
       }
-      nodes.set(i, node);
+      this.nodes.set(i, node);
     }
 
-    this.nodes = nodes;
+    let numConnections = 0;
+
+    for (const nodeIndex of this.nodes.keys()) {
+      numConnections += this.buildNeighbors(nodeIndex);
+    }
 
     const graphBuildEnd = new Date().getTime();
-
     console.log(`Took ${graphBuildEnd - graphBuildStart}ms to build graph with ${numConnections} connections`);
 
-    for (let i = 0; i < this.geometry.faces.length; ++i) {
-      this.buildHeuristic(i);
+    for (const nodeIndex of this.nodes.keys()) {
+      this.buildHeuristic(nodeIndex);
     }
 
     const heuristicBuildEnd = new Date().getTime();
@@ -82,6 +68,40 @@ class Navmesh {
 
   findCentroid(from, to) {
     return _.findWhere(this.nodes.get(from).neighbors, {index: to}).centroid;
+  }
+
+  buildNeighbors(nodeIndex) {
+    const node = this.nodes.get(nodeIndex);
+    node.neighbors = [];
+
+    let numNeighbors = 0;
+
+    for (const testNode of node.adjacentNodes) {
+      const testVertices = [
+        this.geometry.faces[testNode.index].a,
+        this.geometry.faces[testNode.index].b,
+        this.geometry.faces[testNode.index].c,
+      ];
+      const verticesAboveWater = _.reduce(
+          testVertices,
+          function(memo, v) {
+            return memo + (this.geometry.vertices[v].lengthSq() > 1 ? 1 : 0);
+          }.bind(this),
+          0);
+
+      if (verticesAboveWater < 2) {
+        continue;
+      }
+
+      const centroid = this.geometry.vertices[testNode.sharedVertices[0]].clone()
+          .add(this.geometry.vertices[testNode.sharedVertices[1]])
+          .multiplyScalar(0.5);
+
+      node.neighbors.push({index: testNode.index, centroid: centroid});
+      ++numNeighbors;
+    }
+
+    return numNeighbors;
   }
 
   // build our A* heuristic. Do a breadth-first search over all nodes to find the distance
