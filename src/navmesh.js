@@ -70,6 +70,19 @@ class Navmesh {
     return _.findWhere(this.nodes.get(from).neighbors, {index: to}).centroid;
   }
 
+  isTraversable(nodeIndex) {
+    const face = this.geometry.faces[nodeIndex];
+    const testVertices = [face.a, face.b, face.c];
+    const verticesAboveWater = _.reduce(
+        testVertices,
+        function(memo, v) {
+          return memo + (this.geometry.vertices[v].lengthSq() > 1 ? 1 : 0);
+        }.bind(this),
+        0);
+
+    return verticesAboveWater >= 2;
+  }
+
   buildNeighbors(nodeIndex) {
     const node = this.nodes.get(nodeIndex);
     node.neighbors = [];
@@ -77,21 +90,7 @@ class Navmesh {
     let numNeighbors = 0;
 
     for (const testNode of node.adjacentNodes) {
-      const testVertices = [
-        this.geometry.faces[testNode.index].a,
-        this.geometry.faces[testNode.index].b,
-        this.geometry.faces[testNode.index].c,
-      ];
-      const verticesAboveWater = _.reduce(
-          testVertices,
-          function(memo, v) {
-            return memo + (this.geometry.vertices[v].lengthSq() > 1 ? 1 : 0);
-          }.bind(this),
-          0);
-
-      if (verticesAboveWater < 2) {
-        continue;
-      }
+      if (!this.isTraversable(testNode.index)) continue;
 
       const centroid = this.geometry.vertices[testNode.sharedVertices[0]].clone()
           .add(this.geometry.vertices[testNode.sharedVertices[1]])
