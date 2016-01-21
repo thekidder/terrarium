@@ -85,6 +85,7 @@ class Navmesh {
 
   buildNeighbors(nodeIndex) {
     const node = this.nodes.get(nodeIndex);
+    const face = this.geometry.faces[nodeIndex];
     node.neighbors = [];
 
     let numNeighbors = 0;
@@ -92,11 +93,21 @@ class Navmesh {
     for (const testNode of node.adjacentNodes) {
       if (!this.isTraversable(testNode.index)) continue;
 
+      const pointA = this.geometry.vertices[testNode.sharedVertices[0]]
+          .clone().applyMatrix4(face.toFaceBasis);
+      const pointB = this.geometry.vertices[testNode.sharedVertices[1]]
+          .clone().applyMatrix4(face.toFaceBasis);
+
+      const sharedEdge = {
+        point: pointA,
+        direction: pointB.sub(pointA).normalize(),
+      };
+
       const centroid = this.geometry.vertices[testNode.sharedVertices[0]].clone()
           .add(this.geometry.vertices[testNode.sharedVertices[1]])
           .multiplyScalar(0.5);
 
-      node.neighbors.push({index: testNode.index, centroid: centroid});
+      node.neighbors.push({index: testNode.index, sharedEdge: sharedEdge, centroid: centroid});
       ++numNeighbors;
     }
 
