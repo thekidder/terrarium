@@ -70,6 +70,11 @@ class Navmesh {
     return _.findWhere(this.nodes.get(from).neighbors, {index: to}).centroid;
   }
 
+  findEdge(from, to) {
+    return _.findWhere(this.nodes.get(from).neighbors, {index: to}).sharedEdge;
+  }
+
+
   isTraversable(nodeIndex) {
     const face = this.geometry.faces[nodeIndex];
     const testVertices = [face.a, face.b, face.c];

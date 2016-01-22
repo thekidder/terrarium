@@ -22,15 +22,15 @@ class Game {
     this.startMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0x00ff00);
     this.endMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0xff0000);
 
+    this.nibblePos = new THREE.Vector3();
     this.findPath();
 
-    this.nibble = Debug.createMarker(this.planet.faceCentroid(this.path[0]), 0.02, 0xffffff);
+    this.nibble = Debug.createMarker(new THREE.Vector3(), 0.02, 0xffffff);
 
     this.planet.sphere.add(this.startMarker);
     this.planet.sphere.add(this.endMarker);
     this.planet.sphere.add(this.nibble);
 
-    this.camera.position.z = 2.5;
     this.velocity = new THREE.Vector3();
   }
 
@@ -50,13 +50,6 @@ class Game {
   }
 
   update(millis) {
-    const pos = this.nibble.position.clone()
-        .normalize().multiplyScalar(3);
-
-    this.camera.position.copy(pos);
-    this.camera.up = new THREE.Vector3(0,0,1);
-    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
-
     this.totalMillis += millis;
     this.planet.update(millis);
 
@@ -74,29 +67,63 @@ class Game {
     }
 
     if (this.pathIndex == this.path.length) {
-      console.log('diverted');
+      const face = this.planet.locateFace(this.nibble.position).faceIndex;
+      console.log(`diverted to ${face}`);
       this.findPath(
-          this.planet.locateFace(this.nibble.position).faceIndex,
+          face,
           this.path[this.path.length - 1]);
       return;
     }
 
-    const dest = this.planet.findCentroid(this.path[this.pathIndex], this.path[this.pathIndex + 1]);
+    if (oldFace != this.pathIndex) {
+      console.log(`last: ${this.path[oldFace]} curr: ${this.path[this.pathIndex]} next: ${this.path[this.pathIndex + 1]}`);
+      const last = this.planet.heightmap.geometry.faces[this.path[oldFace]];
+      const face = this.planet.heightmap.geometry.faces[this.path[this.pathIndex]];
+      this.nibblePos = this.nibble.position.clone()
+          .applyMatrix4(face.toFaceBasis);
+      this.velocity
+          .applyMatrix4(last.fromFaceBasis);
+      console.log(`cartesian velocity ${JSON.stringify(this.velocity)}`);
+      this.velocity
+          .applyMatrix4(face.toFaceBasis);
+      //this.velocity.set(0, 0, 0);
+    }
 
-    const accel = 0.000015;
-    const direction = dest.clone()
-        .sub(this.nibble.position)
+    const edge = this.planet.navmesh.findEdge(this.path[this.pathIndex], this.path[this.pathIndex + 1]);
+
+    const pointOnLine = edge.point.clone().add(
+        edge.direction.clone().multiplyScalar(
+              this.nibblePos.clone().sub(edge.point).dot(edge.direction)));
+
+    const accel = 0.000006;
+    const direction = pointOnLine
+        .sub(this.nibblePos)
         .normalize()
         .multiplyScalar(accel * millis);
 
+    // const direction = dest.clone()
+    //     .sub(this.nibble.position)
+    //     .normalize()
+    //     .multiplyScalar(accel * millis);
+
     this.velocity.add(direction);
 
-    const speed = 0.005;
+    const speed = 0.001;
     if (this.velocity.lengthSq() > speed * speed) {
       this.velocity.normalize().multiplyScalar(speed);
     }
 
-    this.nibble.position.add(this.velocity);
+    this.nibblePos.add(this.velocity);
+
+    this.nibble.position.copy(this.nibblePos)
+        .applyMatrix4(this.planet.heightmap.geometry.faces[this.path[this.pathIndex]].fromFaceBasis);
+
+    const pos = this.nibble.position.clone()
+        .normalize().multiplyScalar(3);
+
+    this.camera.position.copy(pos);
+    this.camera.up = new THREE.Vector3(0,0,1);
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
   }
 
   findPath(start, end) {
@@ -112,6 +139,8 @@ class Game {
 
     this.startMarker.position.copy(this.planet.faceCentroid(this.path[0]));
     this.endMarker.position.copy(this.planet.faceCentroid(this.path[this.path.length - 1]));
+
+    this.nibblePos.copy(this.planet.faceCentroid(this.path[0]));
 
     // remove old path visualization
     for (const marker of this.pathMarkers) {

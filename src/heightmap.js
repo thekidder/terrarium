@@ -117,10 +117,10 @@ class Heightmap {
   }
 
   faceCentroid(faceIndex) {
-    const face = this.geometry.faces[faceIndex];
-    return this.geometry.vertices[face.a].clone()
-        .add(this.geometry.vertices[face.b])
-        .add(this.geometry.vertices[face.c])
+    const points = [...this.geometry.faces[faceIndex].pointsInFaceSpace.values()];
+    return points[0].clone()
+        .add(points[1])
+        .add(points[2])
         .multiplyScalar(1 / 3);
   }
 }
