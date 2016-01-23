@@ -12,6 +12,17 @@ const Debug = {
 
     return marker;
   },
+
+  createMarkerLine: function(start, end, color) {
+    const material = new THREE.LineBasicMaterial({
+      color: color,
+    });
+
+    const geometry = new THREE.Geometry();
+    geometry.vertices.push(start, end);
+
+    return new THREE.Line(geometry, material);
+  },
 };
 
 export default Debug;
