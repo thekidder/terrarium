@@ -94,7 +94,6 @@ class Game {
           .applyMatrix4(last.fromFaceBasis)
           .applyMatrix4(face.toFaceBasis);
       this.velocity.z = 0;
-      //this.velocity.set(0, 0, 0);
     }
 
     const edge = this.planet.navmesh.findEdge(this.path[this.pathIndex], this.path[this.pathIndex + 1]);
@@ -110,9 +109,8 @@ class Game {
     const speed = 0.0001;
 
     const direction = pointOnLine
-        .sub(this.nibblePos);
-    //direction.z = 0;
-    direction.normalize()
+        .sub(this.nibblePos)
+        .normalize()
         .multiplyScalar(speed * millis);
 
     console.log(`direction: ${JSON.stringify(direction)}`);
@@ -128,16 +126,19 @@ class Game {
     //   this.velocity.normalize().multiplyScalar(speed);
     // }
 
+    const preMove = this.nibble.position.clone();
+
     this.nibblePos.add(direction);
 
     this.nibble.position.copy(this.nibblePos)
         .applyMatrix4(face.fromFaceBasis);
 
-    const cartesianDirection = direction.clone()
-        .applyMatrix4(face.fromFaceBasis);
-    cartesianDirection
+    const postMove = this.nibble.position.clone();
+
+    const cartesianDirection = postMove
+        .sub(preMove)
         .normalize()
-        .multiplyScalar(0.3);
+        .multiplyScalar(0.1);
 
     this.directionMarker = Debug.createMarkerLine(
         this.nibble.position.clone(),
