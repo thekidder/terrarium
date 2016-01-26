@@ -96,19 +96,21 @@ class Game {
       this.velocity.z = 0;
     }
 
-    const edge = this.planet.navmesh.findEdge(this.path[this.pathIndex], this.path[this.pathIndex + 1]);
+    const center = this.planet.navmesh.findCentroid(this.path[this.pathIndex], this.path[this.pathIndex + 1])
+        .clone()
+        .applyMatrix4(face.toFaceBasis);
 
-    const pointOnLine = edge.point.clone().add(
-        edge.direction.clone().multiplyScalar(
-              this.nibblePos.clone().sub(edge.point).dot(edge.direction)));
+    // const pointOnLine = edge.point.clone().add(
+    //     edge.direction.clone().multiplyScalar(
+    //           this.nibblePos.clone().sub(edge.point).dot(edge.direction)));
 
     console.log(`pos: ${JSON.stringify(this.nibblePos)}`);
-    console.log(`edge: ${JSON.stringify(edge.point)} ${JSON.stringify(edge.direction)}`);
-    console.log(`point: ${JSON.stringify(pointOnLine)}`);
+    // console.log(`edge: ${JSON.stringify(edge.point)} ${JSON.stringify(edge.direction)}`);
+    // console.log(`point: ${JSON.stringify(pointOnLine)}`);
     const accel = 0.00006;
-    const speed = 0.0001;
+    const speed = 0.00003;
 
-    const direction = pointOnLine
+    const direction = center.clone()
         .sub(this.nibblePos)
         .normalize()
         .multiplyScalar(speed * millis);

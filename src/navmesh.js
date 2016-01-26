@@ -31,7 +31,7 @@ class Navmesh {
 
         const sharedVerts = _.intersection(vertices, testVertices);
 
-        if (sharedVerts.length < 2) {
+        if (sharedVerts.length === 0) {
           continue;
         }
 
@@ -98,21 +98,21 @@ class Navmesh {
     for (const testNode of node.adjacentNodes) {
       if (!this.isTraversable(testNode.index)) continue;
 
-      const pointA = this.geometry.vertices[testNode.sharedVertices[0]]
-          .clone().applyMatrix4(face.toFaceBasis);
-      const pointB = this.geometry.vertices[testNode.sharedVertices[1]]
-          .clone().applyMatrix4(face.toFaceBasis);
+      // const pointA = this.geometry.vertices[testNode.sharedVertices[0]]
+      //     .clone().applyMatrix4(face.toFaceBasis);
+      // const pointB = this.geometry.vertices[testNode.sharedVertices[1]]
+      //     .clone().applyMatrix4(face.toFaceBasis);
 
-      const sharedEdge = {
-        point: pointA,
-        direction: pointB.sub(pointA).normalize(),
-      };
+      // const sharedEdge = {
+      //   point: pointA,
+      //   direction: pointB.sub(pointA).normalize(),
+      // };
 
-      const centroid = this.geometry.vertices[testNode.sharedVertices[0]].clone()
-          .add(this.geometry.vertices[testNode.sharedVertices[1]])
-          .multiplyScalar(0.5);
+      const centroid = this.geometry.vertices[testNode.sharedVertices[0]].clone();
+          // .add(this.geometry.vertices[testNode.sharedVertices[1]])
+          // .multiplyScalar(0.5);
 
-      node.neighbors.push({index: testNode.index, sharedEdge: sharedEdge, centroid: centroid});
+      node.neighbors.push({index: testNode.index, centroid: centroid});
       ++numNeighbors;
     }
 
