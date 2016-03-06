@@ -1,10 +1,11 @@
 import THREE from 'three.js';
 import Stats from 'stats.js';
 
-import Game from './game.js';
-
 class App {
-  constructor() {
+  constructor(name, game) {
+    this.name = name;
+    this.game = game;
+
     // create FPS counter
     this.stats = new Stats();
     this.stats.setMode(0); // 0: fps, 1: ms, 2: mb
@@ -17,9 +18,6 @@ class App {
     this.renderer = new THREE.WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(this.renderer.domElement);
-
-    // create game object
-    this.game = new Game(this.renderer);
 
     // update and render loop boilerplate
     this.timestepMillis = 20;
@@ -65,7 +63,7 @@ class App {
     if (!this.paused) {
       this.updateLoop();
     }
-    this.game.render();
+    this.renderer.render(this.game.scene, this.game.camera);
     this.stats.end();
 
     if (!this.paused) {
@@ -74,13 +72,13 @@ class App {
   }
 
   onBlur(event) {
-    document.title = "Terrarium - paused";
+    document.title = `${this.name} - paused`;
     this.game.onBlur(event);
     this.paused = true;
   }
 
   onFocus(event) {
-    document.title = "Terrarium";
+    document.title = this.name;
     this.game.onFocus(event);
     this.paused = false;
     // don't advance game while paused
@@ -97,6 +95,4 @@ class App {
   }
 }
 
-const app = new App();
-app.setEventListeners();
-app.run();
+export default App;

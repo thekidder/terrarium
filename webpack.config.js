@@ -6,11 +6,14 @@ require('es6-promise').polyfill()
 
 module.exports = {
   devtool: 'source-map',
-  entry: './src/app.js',
+  entry: {
+    terrarium: "./src/terrarium.js",
+    editor: "./src/editor.js",
+  },
   output: {
     path: path.resolve(__dirname, 'build'),
     publicPath: '/assets/',
-    filename: 'bundle.js'
+    filename: '[name].bundle.js'
   },
   module: {
     loaders: [

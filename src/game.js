@@ -8,10 +8,7 @@ import Planet from './planet.js';
 import PlanetMath from './planet-math.js';
 
 class Game {
-  constructor(renderer) {
-    this.totalMillis = 0;
-    this.renderer = renderer;
-
+  constructor() {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 ); // aspect will get set in onResize
 
@@ -59,7 +56,6 @@ class Game {
       this.scene.remove(this.directionMarker);
     }
 
-    this.totalMillis += millis;
     this.planet.update(millis);
 
     if (this.pather.isPathable()) {
@@ -108,10 +104,6 @@ class Game {
         .add(this.planet.heightmap.geometry.vertices[face.b])
         .add(this.planet.heightmap.geometry.vertices[face.c])
         .multiplyScalar(1 / 3);
-  }
-
-  render() {
-    this.renderer.render(this.scene, this.camera);
   }
 
   onResize(width, height) {
