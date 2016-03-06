@@ -3,6 +3,7 @@ import Simplex from 'simplex-noise';
 import THREE from 'three.js';
 
 import Debug from './debug.js';
+import PathFactory from './path.js';
 import Planet from './planet.js';
 import PlanetMath from './planet-math.js';
 
@@ -22,17 +23,20 @@ class Game {
     this.startMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0x00ff00);
     this.endMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0xff0000);
 
-    this.nibblePos = new THREE.Vector3();
-    this.findPath();
-    this.nibblePos.copy(this.planet.faceCentroid(this.path[0]));
-
     this.nibble = Debug.createMarker(new THREE.Vector3(), 0.02, 0xffffff);
+    this.nibble.position.copy(this.planet.heightmap.faceCentroidCartesian(this.planet.randomFace()));
 
     this.planet.sphere.add(this.startMarker);
     this.planet.sphere.add(this.endMarker);
     this.planet.sphere.add(this.nibble);
 
     this.velocity = new THREE.Vector3();
+
+    const destFace = this.planet.randomFace();
+    const dest = this.planet.heightmap.faceCentroidCartesian(destFace);
+
+    this.pathFactory = new PathFactory(this.planet.heightmap, this.planet.navmesh, this.planet.sphere);
+    this.pather = this.pathFactory.findPath(this.nibble.position, dest);
   }
 
   populateScene() {
@@ -58,96 +62,10 @@ class Game {
     this.totalMillis += millis;
     this.planet.update(millis);
 
-    const oldFace = this.pathIndex;
-
-    while (this.pathIndex < this.path.length &&
-        !this.planet.inFace(this.nibble.position, this.path[this.pathIndex])) {
-      ++this.pathIndex;
+    if (this.pather.isPathable()) {
+      this.pather.step(millis);
     }
-
-    if (this.pathIndex == this.path.length - 1) {
-      console.log('done');
-      this.findPath();
-      return;
-    }
-
-    if (this.pathIndex == this.path.length) {
-      const face = this.planet.locateFace(this.nibble.position).faceIndex;
-      console.log(`diverted to ${face}`);
-      this.findPath(
-          face,
-          this.path[this.path.length - 1]);
-      return;
-    }
-
-    const face = this.planet.heightmap.geometry.faces[this.path[this.pathIndex]];
-
-    if (oldFace != this.pathIndex) {
-      console.log(`last: ${this.path[oldFace]} curr: ${this.path[this.pathIndex]} next: ${this.path[this.pathIndex + 1]}`);
-      const last = this.planet.heightmap.geometry.faces[this.path[oldFace]];
-      this.nibblePos = this.nibblePos.clone()
-          .applyMatrix4(last.fromFaceBasis)
-          .applyMatrix4(face.toFaceBasis);
-      console.log(`pos after ${JSON.stringify(this.nibblePos)}`);
-
-      this.velocity
-          .applyMatrix4(last.fromFaceBasis)
-          .applyMatrix4(face.toFaceBasis);
-      this.velocity.z = 0;
-    }
-
-    const center = this.planet.navmesh.findCentroid(this.path[this.pathIndex], this.path[this.pathIndex + 1])
-        .clone()
-        .applyMatrix4(face.toFaceBasis);
-
-    // const pointOnLine = edge.point.clone().add(
-    //     edge.direction.clone().multiplyScalar(
-    //           this.nibblePos.clone().sub(edge.point).dot(edge.direction)));
-
-    console.log(`pos: ${JSON.stringify(this.nibblePos)}`);
-    // console.log(`edge: ${JSON.stringify(edge.point)} ${JSON.stringify(edge.direction)}`);
-    // console.log(`point: ${JSON.stringify(pointOnLine)}`);
-    const accel = 0.00006;
-    const speed = 0.00003;
-
-    const direction = center.clone()
-        .sub(this.nibblePos)
-        .normalize()
-        .multiplyScalar(speed * millis);
-
-    console.log(`direction: ${JSON.stringify(direction)}`);
-
-    // const direction = dest.clone()
-    //     .sub(this.nibble.position)
-    //     .normalize()
-    //     .multiplyScalar(accel * millis);
-
-    // this.velocity.copy(direction);
-
-    // if (this.velocity.lengthSq() > speed * speed) {
-    //   this.velocity.normalize().multiplyScalar(speed);
-    // }
-
-    const preMove = this.nibble.position.clone();
-
-    this.nibblePos.add(direction);
-
-    this.nibble.position.copy(this.nibblePos)
-        .applyMatrix4(face.fromFaceBasis);
-
-    const postMove = this.nibble.position.clone();
-
-    const cartesianDirection = postMove
-        .sub(preMove)
-        .normalize()
-        .multiplyScalar(0.1);
-
-    this.directionMarker = Debug.createMarkerLine(
-        this.nibble.position.clone(),
-        this.nibble.position.clone().add(cartesianDirection),
-        0x0000ff);
-
-    this.scene.add(this.directionMarker);
+    this.nibble.position.copy(this.pather.currentPos.cartesian);
 
     const pos = this.nibble.position.clone()
         .normalize().multiplyScalar(3);
@@ -155,11 +73,6 @@ class Game {
     this.camera.position.copy(pos);
     this.camera.up = new THREE.Vector3(0,0,1);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
-
-    const v = this.velocity.clone()
-        .applyMatrix4(face.fromFaceBasis);
-
-    console.log(`pos ${JSON.stringify(this.nibblePos)}`);
   }
 
   findPath(start, end) {
@@ -173,8 +86,8 @@ class Game {
 
     this.pathIndex = 0;
 
-    this.startMarker.position.copy(this.planet.faceCentroid(this.path[0]));
-    this.endMarker.position.copy(this.planet.faceCentroid(this.path[this.path.length - 1]));
+    this.startMarker.position.copy(this.faceCenter(this.path[0]));
+    this.endMarker.position.copy(this.faceCenter(this.path[this.path.length - 1]));
 
     // remove old path visualization
     for (const marker of this.pathMarkers) {
@@ -183,15 +96,18 @@ class Game {
     // draw new path visualization
     this.pathMarkers = [];
     for (const faceIndex of this.path) {
-      const face = this.planet.heightmap.geometry.faces[faceIndex];
-      const pos = this.planet.heightmap.geometry.vertices[face.a].clone()
-          .add(this.planet.heightmap.geometry.vertices[face.b])
-          .add(this.planet.heightmap.geometry.vertices[face.c])
-          .multiplyScalar(1 / 3);
-      const marker = Debug.createMarker(pos, 0.01, 0xff00ff);
+      const marker = Debug.createMarker(this.faceCenter(faceIndex), 0.01, 0xff00ff);
       this.pathMarkers.push(marker);
       this.scene.add(marker);
     }
+  }
+
+  faceCenter(faceIndex) {
+    const face = this.planet.heightmap.geometry.faces[faceIndex];
+    return this.planet.heightmap.geometry.vertices[face.a].clone()
+        .add(this.planet.heightmap.geometry.vertices[face.b])
+        .add(this.planet.heightmap.geometry.vertices[face.c])
+        .multiplyScalar(1 / 3);
   }
 
   render() {

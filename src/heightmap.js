@@ -36,8 +36,10 @@ class Heightmap {
       const translateMatrix = new THREE.Matrix4().makeTranslation(-a.x, -a.y, -a.z);
 
       f.fromFaceBasis = new THREE.Matrix4().makeBasis(x, y, z);
+      f.fromFaceVector = f.fromFaceBasis;
 
-      f.toFaceBasis = new THREE.Matrix4().getInverse(f.fromFaceBasis)
+      f.toFaceVector = new THREE.Matrix4().getInverse(f.fromFaceBasis);
+      f.toFaceBasis = f.toFaceVector.clone()
           .multiply(translateMatrix);
 
       f.fromFaceBasis = new THREE.Matrix4().makeTranslation(a.x, a.y, a.z).multiply(f.fromFaceBasis);
@@ -114,6 +116,18 @@ class Heightmap {
     const surfaceCoords = faceCoords.clone().applyMatrix4(face.fromFaceBasis);
 
     return surfaceCoords;
+  }
+
+  faceCentroidCartesian(face) {
+    const points = [
+      this.geometry.vertices[face.a],
+      this.geometry.vertices[face.b],
+      this.geometry.vertices[face.c],
+    ];
+    return points[0].clone()
+        .add(points[1])
+        .add(points[2])
+        .multiplyScalar(1 / 3);
   }
 
   faceCentroid(faceIndex) {

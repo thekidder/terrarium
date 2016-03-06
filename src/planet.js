@@ -112,11 +112,11 @@ class Planet {
 
   findPath(start, end) {
     if (!start) {
-      start = this.randomFace();
+      start = this.randomFace().faceIndex;
     }
 
     if (!end) {
-      end = this.randomFace();
+      end = this.randomFace().faceIndex;
     }
 
     const path = this.navmesh.findPath(start, end);
@@ -131,7 +131,7 @@ class Planet {
       if (this.heightmap.geometry.vertices[face.a].lengthSq() > 1 &&
           this.heightmap.geometry.vertices[face.b].lengthSq() > 1 &&
           this.heightmap.geometry.vertices[face.c].lengthSq() > 1) {
-        return candidate;
+        return face;
       }
     }
   }

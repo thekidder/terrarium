@@ -31,7 +31,7 @@ class Navmesh {
 
         const sharedVerts = _.intersection(vertices, testVertices);
 
-        if (sharedVerts.length === 0) {
+        if (sharedVerts.length < 2) {
           continue;
         }
 
@@ -109,8 +109,11 @@ class Navmesh {
       // };
 
       const centroid = this.geometry.vertices[testNode.sharedVertices[0]].clone();
-          // .add(this.geometry.vertices[testNode.sharedVertices[1]])
-          // .multiplyScalar(0.5);
+
+      if (testNode.sharedVertices.length == 2) {
+        centroid.add(this.geometry.vertices[testNode.sharedVertices[1]])
+            .multiplyScalar(0.5);
+      }
 
       node.neighbors.push({index: testNode.index, centroid: centroid});
       ++numNeighbors;
@@ -131,7 +134,7 @@ class Navmesh {
     while(next.length > 0) {
       const node = next.shift();
       for (const neighbor of this.nodes.get(node.node).neighbors) {
-        if (!visited.has(neighbor.index)) {
+        if (!visited.has(neighbor.index) || h.get(neighbor.index) > node.distance + 1) {
           next.push({node: neighbor.index, distance: node.distance + 1});
           visited.add(neighbor.index);
         }
@@ -163,25 +166,25 @@ class Navmesh {
 
   collectPath(from, to) {
     const open = new PriorityQueue((a, b) => a.f - b.f);
-    const closed = new Set();
-    const parents = new Map();
+    const costSoFar = new Map();
+    const cameFrom = new Map();
 
-    open.add({node: from, g: 0});
+    open.add({index: from, cost: 0});
 
     while (open.size) {
       const current = open.remove();
-      if (current.node === to) {
+      if (current.index === to) {
         console.log(`evaluated ${closed.size} nodes`);
-        return parents;
+        return cameFrom;
       }
-      closed.add(current.node);
 
-      for(const neighbor of this.nodes.get(current.node).neighbors) {
-        if (closed.has(neighbor.index)) continue;
-        const currentCost = current.g + 1;
-        const next = {node: neighbor.index, g: currentCost, f: currentCost + this.getH(neighbor.index, to)};
-        parents.set(neighbor.index, current.node);
-        open.add(next);
+      for(const next of this.nodes.get(current.index).neighbors) {
+        const newCost = costSoFar.get(current.index) + 1;
+        if (!costSoFar.has(next.index) || newCost < costSoFar.get(next.index)) {
+          costSoFar.set(next.index, newCost);
+          open.add({index: next.index, cost: newCost + this.getH(next.index, to)});
+          cameFrom.set(next.index, current.index);
+        }
       }
     }
     return null;
