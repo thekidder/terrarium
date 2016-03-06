@@ -60,14 +60,23 @@ class App {
   render() {
     this.stats.begin();
 
-    if (!this.paused) {
-      this.updateLoop();
-    }
+    this.updateLoop();
     this.renderer.render(this.game.scene, this.game.camera);
     this.stats.end();
 
     if (!this.paused) {
-      window.requestAnimationFrame(this.render.bind(this));
+      this.requestRender();
+    }
+  }
+
+  requestRender() {
+    this.requestAnimationId = window.requestAnimationFrame(this.render.bind(this));
+  }
+
+  cancelRenderRequest() {
+    if (!!this.requestAnimationId) {
+      window.cancelAnimationFrame(this.requestAnimationId);
+      this.requestAnimationId = null;
     }
   }
 
@@ -75,6 +84,8 @@ class App {
     document.title = `${this.name} - paused`;
     this.game.onBlur(event);
     this.paused = true;
+
+    this.cancelRenderRequest();
   }
 
   onFocus(event) {
@@ -83,7 +94,8 @@ class App {
     this.paused = false;
     // don't advance game while paused
     this.lastMillis = new Date().getTime();
-    window.requestAnimationFrame(this.render.bind(this));
+    this.cancelRenderRequest();
+    this.requestRender();
   }
 
   onResize() {
