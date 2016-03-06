@@ -1,13 +1,15 @@
 import THREE from 'three.js';
 
 import App from './app.js';
+import ArcBallCamera from './arc-camera.js';
 import Debug from './debug.js';
 import Planet from './planet.js';
 
 class Editor {
   constructor() {
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 ); // aspect will get set in onResize
+    this.camera = new ArcBallCamera(3.0, new THREE.Vector3());
+    this.drag = false;
 
     this.camera.position.set(3, 0, 0);
     this.camera.lookAt(new THREE.Vector3());
@@ -36,8 +38,7 @@ class Editor {
   }
 
   onResize(width, height) {
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+    this.camera.onResize(width, height);
   }
 
   onFocus(event) {
@@ -50,12 +51,19 @@ class Editor {
   }
 
   onMouseDown(event) {
+    this.drag = true;
+    this.camera.startRotate(event.clientX, event.clientY);
   }
 
   onMouseUp(event) {
+    this.drag = false;
+    this.camera.endRotate();
   }
 
   onMouseMove(event) {
+    if (this.drag) {
+      this.camera.rotate(event.clientX, event.clientY);
+    }
   }
 }
 
