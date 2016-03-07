@@ -32,6 +32,16 @@ class Editor {
       light.position.copy(lightInfo.position);
       this.scene.add(light);
     }
+
+    // debug axes
+    this.scene.add(Debug.createMarkerLine(
+        new THREE.Vector3(), new THREE.Vector3(2, 0, 0), 0xff0000));
+
+    this.scene.add(Debug.createMarkerLine(
+        new THREE.Vector3(), new THREE.Vector3(0, 2, 0), 0x00ff00));
+
+    this.scene.add(Debug.createMarkerLine(
+        new THREE.Vector3(), new THREE.Vector3(0, 0, 2), 0x0000ff));
   }
 
   update(millis) {
@@ -52,7 +62,7 @@ class Editor {
 
   onMouseDown(event) {
     this.drag = true;
-    this.camera.startRotate(event.clientX, event.clientY);
+    this.camera.startRotate(event.pageX, event.pageY);
   }
 
   onMouseUp(event) {
@@ -62,7 +72,7 @@ class Editor {
 
   onMouseMove(event) {
     if (this.drag) {
-      this.camera.rotate(event.clientX, event.clientY);
+      this.camera.rotate(event.pageX, event.pageY);
     }
   }
 }
