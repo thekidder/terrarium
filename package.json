@@ -26,6 +26,7 @@
     "es6-promise": "^3.0.2",
     "eslint": "^1.10.3",
     "eslint-loader": "^1.1.1",
+    "filesaver.js": "^0.2.0",
     "flowcheck": "^0.2.7",
     "flowcheck-loader": "^1.0.0",
     "path": "^0.12.7",

@@ -16,7 +16,15 @@ class Editor {
 
     this.planet = new Planet(this.scene);
 
+    this.saveHeightmap();
+
     this.populateScene();
+  }
+
+  saveHeightmap() {
+    const data = JSON.stringify(this.planet.heightmap.save());
+    const blob = new Blob([JSON.stringify(data)], {type : 'application/json'});
+    saveAs(blob, "heightmap.js");
   }
 
   populateScene() {

@@ -3,19 +3,47 @@ import PlanetMath from './planet-math.js';
 import THREE from 'three.js';
 
 class Heightmap {
-  constructor(detail, generationFunc) {
-    this.detail = detail;
-    this.generationFunc = generationFunc;
-    this._generate();
+  constructor(geometry) {
+    this.geometry = geometry;
+    this.buildBasisSpaces();
+
+    this.geometry.verticesNeedUpdate = true;
+    this.geometry.elementsNeedUpdate = true;
+    this.geometry.normalsNeedUpdate = true;
+    this.geometry.computeBoundingBox();
   }
 
-  _generate() {
-    this.geometry = new THREE.IcosahedronGeometry(1, this.detail);
+  static load(data) {
+    // TODO
+  }
 
-    this.geometry.vertices.forEach(function(v, i) {
-      v.multiplyScalar(this.generationFunc(v));
-    }.bind(this));
+  static generate(detail, generationFunc) {
+    const geometry = new THREE.IcosahedronGeometry(1, detail);
 
+    geometry.vertices.forEach(function(v, i) {
+      v.multiplyScalar(generationFunc(v));
+    });
+
+    return new Heightmap(geometry);
+  }
+
+  save() {
+    return {
+      vertices: this.geometry.vertices.map(function(v) {
+        return { x: v.x, y: v.y, z: v.z };
+      }),
+      faces: this.geometry.faces.map(function(f) {
+        return {
+          a: f.a,
+          b: f.b,
+          c: f.c,
+          normal: f.normal,
+        };
+      }),
+    };
+  }
+
+  buildBasisSpaces() {
     this.geometry.faces.forEach(function(f, i) {
       // build face coordinate basis for f
       // f is a triangle with vertices a, b, c and the basis set x,y,z, where z points
@@ -54,10 +82,6 @@ class Heightmap {
 
       f.faceIndex = i;
     }.bind(this));
-
-
-    this.geometry.verticesNeedUpdate = true;
-    this.geometry.computeBoundingBox();
   }
 
   locateFace(point) {

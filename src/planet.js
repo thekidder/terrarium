@@ -72,7 +72,7 @@ class Planet {
     const random = Random.create(this.seed);
     const simplex = new Simplex(random.random);
 
-    this.heightmap = new Heightmap(
+    this.heightmap = Heightmap.generate(
         3, HeightmapSimplexGenerator(random, this.scale, this.magnitude));
     this.sphere = new THREE.Mesh(this.heightmap.geometry, this.material);
 
