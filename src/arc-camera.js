@@ -68,7 +68,6 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
       this.objectSidewaysDirection.setLength(
           this.arcBallVectorCurrent.x - this.arcBallVectorPrevious.x);
       this.moveDirection.copy(this.objectUpDirection.add(this.objectSidewaysDirection));
-      console.log(`${JSON.stringify(this.moveDirection)}, ${JSON.stringify(this.eye)}`);
       this.axis.crossVectors(this.moveDirection, this.eye).normalize();
 
       this.moveAngle *= this.options.sensitivity;
