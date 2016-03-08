@@ -19,6 +19,8 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
     this.arcBallVectorPrevious = new THREE.Vector2();
     this.arcBallVectorCurrent = new THREE.Vector2();
 
+    // the following vars are only used in rotate(), but adding them as class variables to
+    // avoid lots of instance creation and GC overhead
     this.eye = new THREE.Vector3();
     this.moveDirection = new THREE.Vector3();
     this.moveAngle = 0.0;
