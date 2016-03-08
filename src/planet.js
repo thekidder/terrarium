@@ -4,6 +4,7 @@ import Simplex from 'simplex-noise';
 import THREE from 'three.js';
 
 import Heightmap from './heightmap.js';
+import HeightmapSimplexGenerator from './heightmap-simplex-generator.js';
 import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 
@@ -71,12 +72,8 @@ class Planet {
     const random = Random.create(this.seed);
     const simplex = new Simplex(random.random);
 
-    const generationFunc = function(v) {
-      const noise = simplex.noise3D(v.x * s, v.y * s, v.z * s);
-      return 1 + noise * m * 0.5;
-    };
-
-    this.heightmap = new Heightmap(3, generationFunc);
+    this.heightmap = new Heightmap(
+        3, HeightmapSimplexGenerator(random, this.scale, this.magnitude));
     this.sphere = new THREE.Mesh(this.heightmap.geometry, this.material);
 
     this.navmesh = new Navmesh(this.heightmap.geometry);

@@ -18,7 +18,8 @@ class Heightmap {
 
     this.geometry.faces.forEach(function(f, i) {
       // build face coordinate basis for f
-      // f is a triangle with vertices a, b, c and the basis set x,y,z, where z points out from the origin
+      // f is a triangle with vertices a, b, c and the basis set x,y,z, where z points
+      // out from the origin
       const a = this.geometry.vertices[f.a];
       const b = this.geometry.vertices[f.b];
       const c = this.geometry.vertices[f.c];
