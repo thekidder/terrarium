@@ -7,7 +7,7 @@ const Scene = {
     options = options || {};
 
     const lights = [
-      { intensity: 0.8, position: new THREE.Vector3(0, 5, 0), debugColor: 0xff0000 },
+      { intensity: 0.8, position: new THREE.Vector3(0, 10, 0), debugColor: 0xff0000 },
       { intensity: 0.7, position: new THREE.Vector3(3, 3, 3), debugColor: 0x00ff00 },
       { intensity: 0.8, position: new THREE.Vector3(-3, -3, -3), debugColor: 0x0000ff },
     ];
