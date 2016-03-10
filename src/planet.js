@@ -40,9 +40,8 @@ class Planet {
       shading: THREE.FlatShading,
     });
 
-    this.seed = Math.random();
+    this.seed = Math.floor(Number.MAX_SAFE_INTEGER * Math.random());
     this.rotation = 0.0;
-    this.needsRegeneration = true;
 
     const waterGeometry = new THREE.IcosahedronGeometry(1, 3);
     const waterMaterial = new THREE.MeshPhongMaterial({
@@ -64,13 +63,19 @@ class Planet {
     this.generatePlanet(this.scale, this.magnitude);
   }
 
+  regenerate() {
+    this.seed = Math.floor(Number.MAX_SAFE_INTEGER * Math.random());
+    this.generatePlanet(this.scale, this.magnitude);
+  }
+
   generatePlanet(s, m) {
     if (this.sphere) {
       this.scene.remove(this.sphere);
     }
 
-    const random = Random.create(this.seed);
-    const simplex = new Simplex(random.random);
+    console.log(`seed: ${this.seed}`);
+
+    const random = new Random(this.seed).random;
 
     this.heightmap = Heightmap.generate(
         3, HeightmapSimplexGenerator(random, this.scale, this.magnitude));
@@ -80,15 +85,9 @@ class Planet {
     this.navmesh.build();
 
     this.scene.add(this.sphere);
-    this.needsRegeneration = false;
   }
 
   update(millis) {
-    if (this.needsRegeneration) {
-      this.generatePlanet(this.scale, this.magnitude);
-      this.needsRegeneration = false;
-    }
-
     this.waterSphere.geometry.vertices.forEach(function(v) {
       const s = 2.4;
       let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 5000.0);

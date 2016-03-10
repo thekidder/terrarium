@@ -1,6 +1,12 @@
 const FileSaver = require('filesaver.js');
 
+require('bootstrap.min.css');
+
+import React from 'react';
+import ReactDOM from 'react-dom';
 import THREE from 'three.js';
+
+import { Button, ButtonToolbar, Panel } from 'react-bootstrap';
 
 import App from './app.js';
 import ArcBallCamera from './arc-camera.js';
@@ -19,15 +25,40 @@ class Editor {
 
     this.planet = new Planet(this.scene);
 
-    this.saveHeightmap();
-
     Scene.populate(this.scene, {debug: true});
+
+    this.renderUI();
+  }
+
+  renderUI() {
+    ReactDOM.render(
+      <Panel>
+        <h6>Heightmap</h6>
+        <p>Seed: {this.planet.seed}</p>
+        <ButtonToolbar>
+          <Button bsSize='xsmall' onClick={this.regenerate.bind(this)}>Regenerate</Button>
+          <Button bsSize='xsmall' onClick={this.saveHeightmap.bind(this)}>Save</Button>
+        </ButtonToolbar>
+      </Panel>,
+      document.getElementById('editor-left')
+    );
+  }
+
+  regenerate() {
+    this.planet.regenerate();
+    this.renderUI();
   }
 
   saveHeightmap() {
-    const data = JSON.stringify(this.planet.heightmap.save());
-    const blob = new Blob([JSON.stringify(data)], {type : 'application/json'});
-    FileSaver.saveAs(blob, "heightmap.js");
+    const data = {
+      seed: this.planet.seed,
+      heightmap: this.planet.heightmap.save()
+    };
+
+    const wrappedData = `const PlanetData = ${JSON.stringify(data)}; export default PlanetData`;
+
+    const blob = new Blob([wrappedData], {type : 'application/json'});
+    FileSaver.saveAs(blob, "planet-data.js");
   }
 
   update(millis) {

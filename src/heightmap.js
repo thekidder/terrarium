@@ -13,7 +13,7 @@ class Heightmap {
     this.geometry.computeBoundingBox();
   }
 
-  static load(data) {
+  static load(planetData) {
     // TODO
   }
 

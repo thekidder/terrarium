@@ -30,7 +30,7 @@ const Scene = {
       scene.add(Debug.createMarkerLine(
           new THREE.Vector3(), new THREE.Vector3(0, 0, 2), 0x0000ff));
     }
-  }
-}
+  },
+};
 
 export default Scene;

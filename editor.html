@@ -4,10 +4,25 @@
     <meta charset=utf-8>
     <title>Terrarium</title>
     <style>
-      body { margin: 0; } canvas { display: block; }
+      body { margin: 0; }
+      canvas { display: block; }
+      #editor-left {
+        text-align: right;
+        position: fixed;
+        right: 10px;
+        top: 10px;
+        z-index: 100;
+      }
+      p {
+        font-size: 0.8em;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        text-transform: uppercase;
+      }
     </style>
   </head>
   <body>
+    <div id="editor-left"></div>
     <script type="text/javascript" src="assets/editor.bundle.js" charset="utf-8"></script>
   </body>
 </html>
