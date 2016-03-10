@@ -6,6 +6,7 @@ import App from './app.js';
 import ArcBallCamera from './arc-camera.js';
 import Debug from './debug.js';
 import Planet from './planet.js';
+import Scene from './scene.js';
 
 class Editor {
   constructor() {
@@ -20,38 +21,13 @@ class Editor {
 
     this.saveHeightmap();
 
-    this.populateScene();
+    Scene.populate(this.scene, {debug: true});
   }
 
   saveHeightmap() {
     const data = JSON.stringify(this.planet.heightmap.save());
     const blob = new Blob([JSON.stringify(data)], {type : 'application/json'});
     FileSaver.saveAs(blob, "heightmap.js");
-  }
-
-  populateScene() {
-    const lights = [
-      { intensity: 0.8, position: new THREE.Vector3(0, 4, 0), debugColor: 0xff0000 },
-      { intensity: 0.7, position: new THREE.Vector3(3, 3, 3), debugColor: 0x00ff00 },
-      { intensity: 0.8, position: new THREE.Vector3(-3, -3, -3), debugColor: 0x0000ff },
-    ];
-
-    for (const lightInfo of lights) {
-      this.scene.add(Debug.createMarker(lightInfo.position, 0.05, lightInfo.debugColor));
-      const light = new THREE.PointLight(0xffffff, lightInfo.intensity, 300, 2);
-      light.position.copy(lightInfo.position);
-      this.scene.add(light);
-    }
-
-    // debug axes
-    this.scene.add(Debug.createMarkerLine(
-        new THREE.Vector3(), new THREE.Vector3(2, 0, 0), 0xff0000));
-
-    this.scene.add(Debug.createMarkerLine(
-        new THREE.Vector3(), new THREE.Vector3(0, 2, 0), 0x00ff00));
-
-    this.scene.add(Debug.createMarkerLine(
-        new THREE.Vector3(), new THREE.Vector3(0, 0, 2), 0x0000ff));
   }
 
   update(millis) {

@@ -6,13 +6,15 @@ import Debug from './debug.js';
 import PathFactory from './path.js';
 import Planet from './planet.js';
 import PlanetMath from './planet-math.js';
+import Scene from './scene.js';
 
 class Game {
   constructor() {
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 ); // aspect will get set in onResize
+    // aspect will get set in onResize
+    this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 );
 
-    this.populateScene();
+    Scene.populate(this.scene);
     this.planet = new Planet(this.scene);
 
     this.pathMarkers = [];
