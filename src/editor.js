@@ -1,3 +1,5 @@
+const FileSaver = require('filesaver.js');
+
 import THREE from 'three.js';
 
 import App from './app.js';
@@ -24,7 +26,7 @@ class Editor {
   saveHeightmap() {
     const data = JSON.stringify(this.planet.heightmap.save());
     const blob = new Blob([JSON.stringify(data)], {type : 'application/json'});
-    saveAs(blob, "heightmap.js");
+    FileSaver.saveAs(blob, "heightmap.js");
   }
 
   populateScene() {
