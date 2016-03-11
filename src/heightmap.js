@@ -13,14 +13,14 @@ class Heightmap {
     this.geometry.computeBoundingBox();
   }
 
-  static load(planetData) {
+  static load(heightmap) {
     const geometry = new THREE.Geometry();
 
-    for (const v of planetData.heightmap.vertices) {
+    for (const v of heightmap.vertices) {
       geometry.vertices.push(new THREE.Vector3(v.x, v.y, v.z));
     }
 
-    for (const f of planetData.heightmap.faces) {
+    for (const f of heightmap.faces) {
       geometry.faces.push(new THREE.Face3(f.a, f.b, f.c));
     }
 

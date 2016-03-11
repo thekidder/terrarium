@@ -4,6 +4,7 @@ import THREE from 'three.js';
 
 import Debug from './debug.js';
 import Heightmap from './heightmap.js';
+import Nibble from './nibble.js';
 import PathFactory from './path.js';
 import Planet from './planet.js';
 import PlanetData from './planet-data.js';
@@ -17,27 +18,24 @@ class Game {
     this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 );
 
     Scene.populate(this.scene);
-    this.planet = new Planet(this.scene, Heightmap.load(PlanetData));
+    this.planet = new Planet(this.scene, Heightmap.load(PlanetData.heightmap));
 
     this.pathMarkers = [];
     // positions will be set when path is found
     this.startMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0x00ff00);
     this.endMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0xff0000);
 
-    this.nibble = Debug.createMarker(new THREE.Vector3(), 0.02, 0xffffff);
-    this.nibble.position.copy(this.planet.heightmap.faceCentroidCartesian(this.planet.randomFace()));
-
+    this.pathFactory = new PathFactory(this.planet.heightmap, this.planet.navmesh, this.planet.sphere);
+    this.nibble = new Nibble(
+        this.planet,
+        this.pathFactory,
+        this.planet.heightmap.faceCentroidCartesian(this.planet.randomFace()));
     this.planet.sphere.add(this.startMarker);
     this.planet.sphere.add(this.endMarker);
-    this.planet.sphere.add(this.nibble);
-
-    this.velocity = new THREE.Vector3();
 
     const destFace = this.planet.randomFace();
     const dest = this.planet.heightmap.faceCentroidCartesian(destFace);
-
-    this.pathFactory = new PathFactory(this.planet.heightmap, this.planet.navmesh, this.planet.sphere);
-    this.pather = this.pathFactory.findPath(this.nibble.position, dest);
+    this.nibble.pathTo(dest);
   }
 
   populateScene() {
@@ -61,13 +59,9 @@ class Game {
     }
 
     this.planet.update(millis);
+    this.nibble.update(millis);
 
-    if (this.pather.isPathable()) {
-      this.pather.step(millis);
-    }
-    this.nibble.position.copy(this.pather.currentPos.cartesian);
-
-    const pos = this.nibble.position.clone()
+    const pos = this.nibble.marker.position.clone()
         .normalize().multiplyScalar(3);
 
     this.camera.position.copy(pos);
