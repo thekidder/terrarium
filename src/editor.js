@@ -12,6 +12,7 @@ import App from './app.js';
 import ArcBallCamera from './arc-camera.js';
 import Debug from './debug.js';
 import Planet from './planet.js';
+import PlanetGenerator from './planet-generator.js';
 import Scene from './scene.js';
 
 class Editor {
@@ -23,7 +24,7 @@ class Editor {
     this.camera.position.set(3, 0, 0);
     this.camera.lookAt(new THREE.Vector3());
 
-    this.planet = new Planet(this.scene);
+    this.planet = new Planet(this.scene, this.buildHeightmap());
 
     Scene.populate(this.scene, {debug: true});
 
@@ -44,18 +45,23 @@ class Editor {
     );
   }
 
+  buildHeightmap() {
+    this.seed = Math.floor(Number.MAX_SAFE_INTEGER * Math.random());
+    return PlanetGenerator.buildHeightmap(this.seed, 1.5, 0.25);
+  }
+
   regenerate() {
-    this.planet.regenerate();
+    this.planet.setHeightmap(this.buildHeightmap());
     this.renderUI();
   }
 
   saveHeightmap() {
     const data = {
       seed: this.planet.seed,
-      heightmap: this.planet.heightmap.save()
+      heightmap: this.planet.heightmap.save(),
     };
 
-    const wrappedData = `const PlanetData = ${JSON.stringify(data)}; export default PlanetData`;
+    const wrappedData = `const PlanetData = ${JSON.stringify(data)}; export default PlanetData;\n`;
 
     const blob = new Blob([wrappedData], {type : 'application/json'});
     FileSaver.saveAs(blob, "planet-data.js");

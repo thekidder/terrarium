@@ -1,17 +1,13 @@
 import _ from 'underscore';
-import Random from 'random-seed';
 import Simplex from 'simplex-noise';
 import THREE from 'three.js';
 
 import Heightmap from './heightmap.js';
-import HeightmapSimplexGenerator from './heightmap-simplex-generator.js';
 import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 
 class Planet {
-  constructor(scene) {
-    this.scale = 1.5;
-    this.magnitude = 0.25;
+  constructor(scene, heightmap) {
     this.waterHeight = 1.02;
     this.sandThreshold = 0.3;
 
@@ -60,25 +56,15 @@ class Planet {
       v.original = v.clone();
     });
 
-    this.generatePlanet(this.scale, this.magnitude);
+    this.setHeightmap(heightmap);
   }
 
-  regenerate() {
-    this.seed = Math.floor(Number.MAX_SAFE_INTEGER * Math.random());
-    this.generatePlanet(this.scale, this.magnitude);
-  }
-
-  generatePlanet(s, m) {
+  setHeightmap(heightmap) {
     if (this.sphere) {
       this.scene.remove(this.sphere);
     }
 
-    console.log(`seed: ${this.seed}`);
-
-    const random = new Random(this.seed).random;
-
-    this.heightmap = Heightmap.generate(
-        3, HeightmapSimplexGenerator(random, this.scale, this.magnitude));
+    this.heightmap = heightmap;
     this.sphere = new THREE.Mesh(this.heightmap.geometry, this.material);
 
     this.navmesh = new Navmesh(this.heightmap.geometry);

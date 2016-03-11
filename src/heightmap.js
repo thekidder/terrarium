@@ -14,7 +14,17 @@ class Heightmap {
   }
 
   static load(planetData) {
-    // TODO
+    const geometry = new THREE.Geometry();
+
+    for (const v of planetData.heightmap.vertices) {
+      geometry.vertices.push(new THREE.Vector3(v.x, v.y, v.z));
+    }
+
+    for (const f of planetData.heightmap.faces) {
+      geometry.faces.push(new THREE.Face3(f.a, f.b, f.c));
+    }
+
+    return new Heightmap(geometry);
   }
 
   static generate(detail, generationFunc) {

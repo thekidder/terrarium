@@ -3,8 +3,10 @@ import Simplex from 'simplex-noise';
 import THREE from 'three.js';
 
 import Debug from './debug.js';
+import Heightmap from './heightmap.js';
 import PathFactory from './path.js';
 import Planet from './planet.js';
+import PlanetData from './planet-data.js';
 import PlanetMath from './planet-math.js';
 import Scene from './scene.js';
 
@@ -15,7 +17,7 @@ class Game {
     this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 );
 
     Scene.populate(this.scene);
-    this.planet = new Planet(this.scene);
+    this.planet = new Planet(this.scene, Heightmap.load(PlanetData));
 
     this.pathMarkers = [];
     // positions will be set when path is found
