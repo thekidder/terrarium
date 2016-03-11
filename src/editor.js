@@ -24,6 +24,7 @@ class Editor {
     this.camera.position.set(3, 0, 0);
     this.camera.lookAt(new THREE.Vector3());
 
+    this.seed = 8711939729391615;
     this.planet = new Planet(this.scene, this.buildHeightmap());
 
     Scene.populate(this.scene, {debug: true});
@@ -35,7 +36,7 @@ class Editor {
     ReactDOM.render(
       <Panel>
         <h6>Heightmap</h6>
-        <p>Seed: {this.planet.seed}</p>
+        <p>Seed: {this.seed}</p>
         <ButtonToolbar>
           <Button bsSize='xsmall' onClick={this.regenerate.bind(this)}>Regenerate</Button>
           <Button bsSize='xsmall' onClick={this.saveHeightmap.bind(this)}>Save</Button>
@@ -46,11 +47,11 @@ class Editor {
   }
 
   buildHeightmap() {
-    this.seed = Math.floor(Number.MAX_SAFE_INTEGER * Math.random());
     return PlanetGenerator.buildHeightmap(this.seed, 1.5, 0.25);
   }
 
   regenerate() {
+    this.seed = Math.floor(Number.MAX_SAFE_INTEGER * Math.random());
     this.planet.setHeightmap(this.buildHeightmap());
     this.renderUI();
   }
@@ -68,6 +69,7 @@ class Editor {
   }
 
   update(millis) {
+    this.planet.update(millis);
   }
 
   onResize(width, height) {

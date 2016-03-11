@@ -36,7 +36,6 @@ class Planet {
       shading: THREE.FlatShading,
     });
 
-    this.seed = Math.floor(Number.MAX_SAFE_INTEGER * Math.random());
     this.rotation = 0.0;
 
     const waterGeometry = new THREE.IcosahedronGeometry(1, 3);
