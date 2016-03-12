@@ -37,6 +37,12 @@ class Game {
 
       this.nibbles.push(nibble);
     }
+
+    this.movementMarker = Debug.createMarker(
+      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(0.04, 0.16, 0.04),
+      0xff00ff);
+    this.scene.add(this.movementMarker);
   }
 
   populateScene() {

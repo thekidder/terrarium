@@ -5,7 +5,12 @@ const Debug = {
     const material = new THREE.MeshBasicMaterial({
       color: color,
     });
-    const geometry = new THREE.BoxGeometry(size, size, size);
+
+    if (!(size instanceof THREE.Vector3)) {
+      size = new THREE.Vector3(size, size, size);
+    }
+
+    const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
     const marker = new THREE.Mesh(geometry, material);
     marker.name = "debug marker";
 

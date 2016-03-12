@@ -20,15 +20,8 @@ const Scene = {
     }
 
     if (options.debug) {
-      // debug axes
-      scene.add(Debug.createMarkerLine(
-          new THREE.Vector3(), new THREE.Vector3(2, 0, 0), 0xff0000));
-
-      scene.add(Debug.createMarkerLine(
-          new THREE.Vector3(), new THREE.Vector3(0, 2, 0), 0x00ff00));
-
-      scene.add(Debug.createMarkerLine(
-          new THREE.Vector3(), new THREE.Vector3(0, 0, 2), 0x0000ff));
+      const axisHelper = new THREE.AxisHelper(2);
+      scene.add(axisHelper);
     }
   },
 };
