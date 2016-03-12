@@ -37,7 +37,7 @@ class Heightmap {
     return new Heightmap(geometry);
   }
 
-  save() {
+  toJSON() {
     return {
       vertices: this.geometry.vertices.map(function(v) {
         return { x: v.x, y: v.y, z: v.z };

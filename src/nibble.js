@@ -22,6 +22,16 @@ class Nibble {
     }
     this.marker.position.copy(this.pather.currentPos.cartesian);
   }
+
+  toJSON() {
+    return {
+      position: {
+        x: this.marker.position.x,
+        y: this.marker.position.y,
+        z: this.marker.position.z,
+      },
+    };
+  }
 };
 
 export default Nibble;

@@ -26,16 +26,17 @@ class Game {
     this.endMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0xff0000);
 
     this.pathFactory = new PathFactory(this.planet.heightmap, this.planet.navmesh, this.planet.sphere);
-    this.nibble = new Nibble(
-        this.planet,
-        this.pathFactory,
-        this.planet.heightmap.faceCentroidCartesian(this.planet.randomFace()));
-    this.planet.sphere.add(this.startMarker);
-    this.planet.sphere.add(this.endMarker);
+    this.nibbles = [];
+    for (const nibbleData of PlanetData.nibbles) {
+      const pos = new THREE.Vector3().copy(nibbleData.position);
+      const nibble = new Nibble(this.planet, this.pathFactory, pos);
 
-    const destFace = this.planet.randomFace();
-    const dest = this.planet.heightmap.faceCentroidCartesian(destFace);
-    this.nibble.pathTo(dest);
+      const destFace = this.planet.randomFace();
+      const dest = this.planet.heightmap.faceCentroidCartesian(destFace);
+      nibble.pathTo(dest);
+
+      this.nibbles.push(nibble);
+    }
   }
 
   populateScene() {
@@ -59,10 +60,16 @@ class Game {
     }
 
     this.planet.update(millis);
-    this.nibble.update(millis);
 
-    const pos = this.nibble.marker.position.clone()
-        .normalize().multiplyScalar(3);
+    const avgPos = new THREE.Vector3();
+    for (const nibble of this.nibbles) {
+      avgPos.add(nibble.marker.position);
+      nibble.update(millis);
+    }
+
+    avgPos.multiplyScalar(this.nibbles.length);
+
+    const pos = avgPos.normalize().multiplyScalar(3);
 
     this.camera.position.copy(pos);
     this.camera.up = new THREE.Vector3(0,0,1);

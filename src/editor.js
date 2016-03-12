@@ -13,6 +13,7 @@ import ArcBallCamera from './arc-camera.js';
 import Debug from './debug.js';
 import Planet from './planet.js';
 import PlanetGenerator from './planet-generator.js';
+import Nibble from './nibble.js';
 import Scene from './scene.js';
 
 class Editor {
@@ -26,6 +27,10 @@ class Editor {
 
     this.seed = 8711939729391615;
     this.planet = new Planet(this.scene, this.buildHeightmap());
+    this.mouse = new THREE.Vector2();
+    this.raycaster = new THREE.Raycaster();
+
+    this.nibbles = [];
 
     Scene.populate(this.scene, {debug: true});
 
@@ -39,7 +44,7 @@ class Editor {
         <p>Seed: {this.seed}</p>
         <ButtonToolbar>
           <Button bsSize='xsmall' onClick={this.regenerate.bind(this)}>Regenerate</Button>
-          <Button bsSize='xsmall' onClick={this.saveHeightmap.bind(this)}>Save</Button>
+          <Button bsSize='xsmall' onClick={this.save.bind(this)}>Save</Button>
         </ButtonToolbar>
       </Panel>,
       document.getElementById('editor-left')
@@ -56,10 +61,11 @@ class Editor {
     this.renderUI();
   }
 
-  saveHeightmap() {
+  save() {
     const data = {
       seed: this.planet.seed,
-      heightmap: this.planet.heightmap.save(),
+      heightmap: this.planet.heightmap,
+      nibbles: this.nibbles,
     };
 
     const wrappedData = `const PlanetData = ${JSON.stringify(data)}; export default PlanetData;\n`;
@@ -85,6 +91,7 @@ class Editor {
   onKeyDown(event) {
   }
 
+
   onMouseDown(event) {
     this.drag = true;
     this.camera.startRotate(event.pageX, event.pageY);
@@ -93,12 +100,28 @@ class Editor {
   onMouseUp(event) {
     this.drag = false;
     this.camera.endRotate();
+
+    this.placeNibble(event);
   }
 
   onMouseMove(event) {
     if (this.drag) {
       this.camera.rotate(event.pageX, event.pageY);
     }
+  }
+
+  placeNibble(event) {
+    this.mouse.x = event.pageX / window.innerWidth * 2 - 1;
+    this.mouse.y = -event.pageY / window.innerHeight * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersections = this.raycaster.intersectObject(this.planet.sphere);
+
+    const pos = this.raycaster.ray.at(intersections[0].distance);
+    console.log(`adding nibble at ${JSON.stringify(pos)}`);
+    const nibble = new Nibble(this.planet, null, pos);
+    this.nibbles.push(nibble);
+
+    console.log(`intersection: ${intersections[0].faceIndex}`);
   }
 }
 

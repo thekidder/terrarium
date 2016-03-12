@@ -7,6 +7,7 @@ const Debug = {
     });
     const geometry = new THREE.BoxGeometry(size, size, size);
     const marker = new THREE.Mesh(geometry, material);
+    marker.name = "debug marker";
 
     marker.position.copy(position);
 
@@ -21,7 +22,10 @@ const Debug = {
     const geometry = new THREE.Geometry();
     geometry.vertices.push(start, end);
 
-    return new THREE.Line(geometry, material);
+    const line = new THREE.Line(geometry, material);
+    line.name = "debug line";
+
+    return line;
   },
 };
 

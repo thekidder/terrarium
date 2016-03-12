@@ -49,6 +49,7 @@ class Planet {
     });
     this.waterSimplex = new Simplex(Math.random);
     this.waterSphere = new THREE.Mesh(waterGeometry, waterMaterial);
+    this.waterSphere.name = "water";
     this.scene.add(this.waterSphere);
 
     this.waterSphere.geometry.vertices.forEach(function(v) {
@@ -65,6 +66,7 @@ class Planet {
 
     this.heightmap = heightmap;
     this.sphere = new THREE.Mesh(this.heightmap.geometry, this.material);
+    this.sphere.name = "heightmap";
 
     this.navmesh = new Navmesh(this.heightmap.geometry);
     this.navmesh.build();
