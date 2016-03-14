@@ -42,6 +42,11 @@ class Game {
       new THREE.Vector3(1, 0, 0),
       new THREE.Vector3(0.04, 0.16, 0.04),
       0xff00ff);
+
+    this.movementMarker.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        this.movementMarker.position.clone().normalize());
+
     this.scene.add(this.movementMarker);
   }
 
