@@ -39,7 +39,7 @@ class Game {
     }
 
     this.movementMarker = Debug.createMarker(
-      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(1.06, 0, 0),
       new THREE.Vector3(0.04, 0.16, 0.04),
       0xff00ff);
 
