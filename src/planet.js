@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import Simplex from 'simplex-noise';
-import THREE from 'three.js';
+import THREE from 'three';
 
 import Heightmap from './heightmap.js';
 import Navmesh from './navmesh.js';

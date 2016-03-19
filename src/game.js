@@ -1,9 +1,10 @@
 import Random from 'random-seed';
 import Simplex from 'simplex-noise';
-import THREE from 'three.js';
+import THREE from 'three';
 
 import Debug from './debug.js';
 import Heightmap from './heightmap.js';
+import House from './models/house.js';
 import Nibble from './nibble.js';
 import PathFactory from './path.js';
 import Planet from './planet.js';
@@ -38,16 +39,35 @@ class Game {
       this.nibbles.push(nibble);
     }
 
-    this.movementMarker = Debug.createMarker(
-      new THREE.Vector3(1.06, 0, 0),
-      new THREE.Vector3(0.04, 0.16, 0.04),
-      0xff00ff);
+    // const loader = new THREE.BabylonLoader();
+    // this.movementMarker = loader.parse(House);
 
-    this.movementMarker.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        this.movementMarker.position.clone().normalize());
+    // this.movementMarker.quaternion.setFromUnitVectors(
+    //     new THREE.Vector3(0, 1, 0),
+    //     this.movementMarker.position.clone().normalize());
 
-    this.scene.add(this.movementMarker);
+    // this.scene.add(this.movementMarker);
+
+    // instantiate a loader
+    const jsonLoader = new THREE.JSONLoader();
+
+    // load a resource
+    jsonLoader.load(
+      // resource URL
+      'assets/marker3.json',
+      // Function when resource is loaded
+      function ( geometry, materials ) {
+        const material = new THREE.MeshPhongMaterial({
+          color: 0x555555,
+          emissive: 0x333333,
+          side: THREE.DoubleSide,
+          shading: THREE.FlatShading,
+        });
+        const object = new THREE.Mesh( geometry, material );
+        object.position.set(0, 0, 1);
+        this.scene.add( object );
+      }.bind(this)
+);
   }
 
   populateScene() {

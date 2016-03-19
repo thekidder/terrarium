@@ -4,7 +4,7 @@ require('bootstrap.min.css');
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import THREE from 'three.js';
+import THREE from 'three';
 
 import { Button, ButtonToolbar, Panel } from 'react-bootstrap';
 

@@ -2,3 +2,4 @@ node_modules/
 build/
 *.sublime-workspace
 npm-debug.log
+**/*.blend1

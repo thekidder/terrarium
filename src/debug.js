@@ -1,4 +1,4 @@
-import THREE from 'three.js';
+import THREE from 'three';
 
 const Debug = {
   createMarker: function(position, size, color) {

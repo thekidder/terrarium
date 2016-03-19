@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import PlanetMath from './planet-math.js';
-import THREE from 'three.js';
+import THREE from 'three';
 
 class Heightmap {
   constructor(geometry) {
