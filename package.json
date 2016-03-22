@@ -40,7 +40,7 @@
     "simplex-noise": "^2.2.0",
     "stats.js": "^1.0.0",
     "style-loader": "^0.13.0",
-    "three": "0.74.0",
+    "three": "0.75.0",
     "underscore": "^1.8.3",
     "url-loader": "^0.5.7",
     "webpack": "^1.12.9",
