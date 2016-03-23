@@ -7,8 +7,8 @@ import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 
 class Planet {
-  constructor(scene, heightmap) {
-    this.waterHeight = 1.02;
+  constructor(scene, heightmap, waterRadius) {
+    this.waterHeight = waterRadius * 1.02;
     this.sandThreshold = 0.3;
 
     this.scene = scene;

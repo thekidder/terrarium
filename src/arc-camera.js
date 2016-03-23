@@ -29,6 +29,8 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
     this.eyeDirection = new THREE.Vector3();
     this.objectUpDirection = new THREE.Vector3();
     this.objectSidewaysDirection = new THREE.Vector3();
+
+    this.position.set(radius, 0, 0);
   }
 
   onResize(width, height) {

@@ -11,6 +11,7 @@ class Heightmap {
     this.geometry.elementsNeedUpdate = true;
     this.geometry.normalsNeedUpdate = true;
     this.geometry.computeBoundingBox();
+    this.geometry.computeBoundingSphere();
   }
 
   static load(heightmap) {

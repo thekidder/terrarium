@@ -16,25 +16,50 @@ import PlanetGenerator from './planet-generator.js';
 import Nibble from './nibble.js';
 import Scene from './scene.js';
 
+const size = 30.0;
+
 class Editor {
   constructor() {
     this.scene = new THREE.Scene();
-    this.camera = new ArcBallCamera(3.0, new THREE.Vector3());
+    this.camera = new ArcBallCamera(size * 2.2, new THREE.Vector3());
     this.drag = false;
 
-    this.camera.position.set(3, 0, 0);
     this.camera.lookAt(new THREE.Vector3());
 
     this.seed = 8711939729391615;
-    this.planet = new Planet(this.scene, this.buildHeightmap());
+    this.planet = new Planet(this.scene, this.buildHeightmap(), size);
     this.mouse = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
+    this.raycaster.near = size / 3;
+    this.raycaster.far = size * 3;
 
     this.nibbles = [];
 
-    Scene.populate(this.scene, {debug: true});
+    Scene.populate(this.scene, {debug: true, scale: size});
 
     this.renderUI();
+
+    // load a resource
+    new THREE.ObjectLoader().load(
+      // resource URL
+      'assets/marker1.json',
+      // Function when resource is loaded
+      function ( object, materials ) {
+        const material = new THREE.MeshPhongMaterial({
+          color: 0x555555,
+          emissive: 0x333333,
+          side: THREE.DoubleSide,
+          shading: THREE.FlatShading,
+        });
+        // const object = new THREE.Mesh( geometry, material );
+        object.position.set(0, size, 0);
+        object.traverse(function(o) {
+          o.material = material;
+        });
+
+        this.scene.add( object );
+      }.bind(this)
+    );
   }
 
   renderUI() {
@@ -52,7 +77,7 @@ class Editor {
   }
 
   buildHeightmap() {
-    return PlanetGenerator.buildHeightmap(this.seed, 1.5, 0.25);
+    return PlanetGenerator.buildHeightmap(this.seed, 1.5, 0.25, size);
   }
 
   regenerate() {
@@ -111,10 +136,10 @@ class Editor {
   }
 
   placeNibble(event) {
-    this.mouse.x = event.pageX / window.innerWidth * 2 - 1;
-    this.mouse.y = -event.pageY / window.innerHeight * 2 + 1;
+    this.mouse.x = event.clientX / window.innerWidth * 2 - 1;
+    this.mouse.y = -event.clientY / window.innerHeight * 2 + 1;
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    const intersections = this.raycaster.intersectObject(this.planet.sphere);
+    const intersections = this.raycaster.intersectObject(this.planet.sphere, true);
 
     const pos = this.raycaster.ray.at(intersections[0].distance);
     console.log(`adding nibble at ${JSON.stringify(pos)}`);

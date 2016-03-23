@@ -11,14 +11,16 @@ import PlanetData from './planet-data.js';
 import PlanetMath from './planet-math.js';
 import Scene from './scene.js';
 
+const size = 30;
+
 class Game {
   constructor() {
     this.scene = new THREE.Scene();
     // aspect will get set in onResize
     this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 );
 
-    Scene.populate(this.scene);
-    this.planet = new Planet(this.scene, Heightmap.load(PlanetData.heightmap));
+    Scene.populate(this.scene, {scale: size});
+    this.planet = new Planet(this.scene, Heightmap.load(PlanetData.heightmap), size);
 
     this.pathMarkers = [];
     // positions will be set when path is found
@@ -37,42 +39,6 @@ class Game {
 
       this.nibbles.push(nibble);
     }
-
-    // instantiate a loader
-    const jsonLoader = new THREE.ObjectLoader();
-
-    // load a resource
-    jsonLoader.load(
-      // resource URL
-      'assets/marker3.json',
-      // Function when resource is loaded
-      function ( object, materials ) {
-        const material = new THREE.MeshPhongMaterial({
-          color: 0x555555,
-          emissive: 0x333333,
-          side: THREE.DoubleSide,
-          shading: THREE.FlatShading,
-        });
-        // const object = new THREE.Mesh( geometry, material );
-        // object.position.set(0, 0, 1);
-        this.scene.add( object );
-      }.bind(this)
-);
-  }
-
-  populateScene() {
-    const lights = [
-      { intensity: 0.8, position: new THREE.Vector3(0, 4, 0), debugColor: 0xff0000 },
-      { intensity: 0.7, position: new THREE.Vector3(3, 3, 3), debugColor: 0x00ff00 },
-      { intensity: 0.8, position: new THREE.Vector3(-3, -3, -3), debugColor: 0x0000ff },
-    ];
-
-    for (const lightInfo of lights) {
-      this.scene.add(Debug.createMarker(lightInfo.position, 0.05, lightInfo.debugColor));
-      const light = new THREE.PointLight(0xffffff, lightInfo.intensity, 300, 2);
-      light.position.copy(lightInfo.position);
-      this.scene.add(light);
-    }
   }
 
   update(millis) {
@@ -90,7 +56,7 @@ class Game {
 
     avgPos.multiplyScalar(this.nibbles.length);
 
-    const pos = avgPos.normalize().multiplyScalar(3);
+    const pos = avgPos.normalize().multiplyScalar(size * 2.2);
 
     this.camera.position.copy(pos);
     this.camera.up = new THREE.Vector3(0,0,1);

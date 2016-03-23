@@ -6,7 +6,7 @@ class Nibble {
   constructor(planet, pathFactory, position) {
     this.planet = planet;
     this.pathFactory = pathFactory;
-    this.marker = Debug.createMarker(new THREE.Vector3(), 0.02, 0xffffff);
+    this.marker = Debug.createMarker(new THREE.Vector3(), 0.8, 0xffffff);
     this.marker.position.copy(position);
 
     this.planet.sphere.add(this.marker);
