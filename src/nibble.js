@@ -12,15 +12,27 @@ class Nibble {
     this.planet.sphere.add(this.marker);
   }
 
+  wander() {
+    if (!this.wanderBehavior) {
+      this.wanderBehavior = this.pathFactory.wander(this.marker.position);
+    }
+    this.pather = null;
+  }
+
   pathTo(dest) {
     this.pather = this.pathFactory.findPath(this.marker.position, dest);
+    this.wanderBehavior = null;
   }
 
   update(millis) {
-    if (this.pather.isPathable()) {
+    if (this.pather && this.pather.isPathable()) {
       this.pather.step(millis);
+      this.marker.position.copy(this.pather.currentPos.cartesian);
     }
-    this.marker.position.copy(this.pather.currentPos.cartesian);
+
+    if (this.wanderBehavior) {
+      this.wanderBehavior.step(millis);
+    }
   }
 
   toJSON() {

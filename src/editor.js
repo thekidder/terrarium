@@ -93,10 +93,10 @@ class Editor {
       nibbles: this.nibbles,
     };
 
-    const wrappedData = `const PlanetData = ${JSON.stringify(data)}; export default PlanetData;\n`;
+    const wrappedData = `${JSON.stringify(data)}\n`;
 
     const blob = new Blob([wrappedData], {type : 'application/json'});
-    FileSaver.saveAs(blob, "planet-data.js");
+    FileSaver.saveAs(blob, 'planet-data.json');
   }
 
   update(millis) {

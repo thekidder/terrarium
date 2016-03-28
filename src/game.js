@@ -7,7 +7,6 @@ import Heightmap from './heightmap.js';
 import Nibble from './nibble.js';
 import PathFactory from './path.js';
 import Planet from './planet.js';
-import PlanetData from './planet-data.js';
 import PlanetMath from './planet-math.js';
 import Scene from './scene.js';
 
@@ -20,28 +19,41 @@ class Game {
     this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 );
 
     Scene.populate(this.scene, {scale: size});
-    this.planet = new Planet(this.scene, Heightmap.load(PlanetData.heightmap), size);
+
+    const loader = new THREE.XHRLoader();
+
+    loader.load('/assets/planet-data.json', this.planetLoaded.bind(this));
+  }
+
+  planetLoaded(data) {
+    data = JSON.parse(data);
+    this.planet = new Planet(this.scene, Heightmap.load(data.heightmap), size);
 
     this.pathMarkers = [];
     // positions will be set when path is found
     this.startMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0x00ff00);
     this.endMarker = Debug.createMarker(new THREE.Vector3(), 0.02, 0xff0000);
 
-    this.pathFactory = new PathFactory(this.planet.heightmap, this.planet.navmesh, this.planet.sphere);
+    this.pathFactory = new PathFactory(this.planet.heightmap, this.planet.navmesh, this.planet);
     this.nibbles = [];
-    for (const nibbleData of PlanetData.nibbles) {
+    for (const nibbleData of data.nibbles) {
       const pos = new THREE.Vector3().copy(nibbleData.position);
       const nibble = new Nibble(this.planet, this.pathFactory, pos);
 
-      const destFace = this.planet.randomFace();
-      const dest = this.planet.heightmap.faceCentroidCartesian(destFace);
-      nibble.pathTo(dest);
+      // const destFace = this.planet.randomFace();
+      // const dest = this.planet.heightmap.faceCentroidCartesian(destFace);
+      // nibble.pathTo(dest);
+      nibble.wander();
 
       this.nibbles.push(nibble);
     }
   }
 
   update(millis) {
+    if (!this.planet) {
+      return;
+    }
+
     if (!!this.directionMarker) {
       this.scene.remove(this.directionMarker);
     }

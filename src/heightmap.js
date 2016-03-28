@@ -149,7 +149,7 @@ class Heightmap {
     const face = this.locateFace(cartesianCoords);
     const faceCoords = cartesianCoords.clone().applyMatrix4(face.toFaceBasis);
     faceCoords.z = 0.0;
-    const surfaceCoords = faceCoords.clone().applyMatrix4(face.fromFaceBasis);
+    const surfaceCoords = faceCoords.applyMatrix4(face.fromFaceBasis);
 
     return surfaceCoords;
   }

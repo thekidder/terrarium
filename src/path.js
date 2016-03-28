@@ -1,13 +1,15 @@
 import _ from 'underscore';
+import Simplex from 'simplex-noise';
 import THREE from 'three';
 
 import Debug from './debug.js';
+import PlanetMath from './planet-math.js';
 
-const defaultPathOptions = {
+const defaultOptions = {
   accel: 0.00005,
   maxSpeed: 0.002, // units/s
   targetDistance: 0.02,
-  debug: false,
+  debug: true,
 };
 
 class Position {
@@ -158,12 +160,63 @@ class Pather {
   }
 }
 
+class Wanderer {
+  constructor(planet, position, options) {
+    this.planet = planet;
+    this.position = position;
+    this.simplex = new Simplex();
+    this.velocity = this.randomFaceVelocity(position);
+    this.rotation = new THREE.Quaternion();
+    this.t = 0;
+
+    if (options.debug) {
+      this.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0xff0000);
+      this.planet.sphere.add(this.debugVelocity);
+    }
+  }
+
+  randomFaceVelocity(pos) {
+    const faceCoords = this.planet.heightmap.toFaceCoords(pos);
+    faceCoords.uv.x += Math.random() * 2 - 1;
+    faceCoords.uv.y += Math.random() * 2 - 1;
+    const direction = this.planet.heightmap.fromFaceCoords(faceCoords);
+    direction.sub(pos).normalize();
+    return direction;
+  }
+
+  step(millis) {
+    const angle = this.simplex.noise2D(this.t, 0);
+    this.rotation.setFromAxisAngle(this.position, angle * millis * 0.0002);
+    this.velocity.applyQuaternion(this.rotation);
+
+    const dest = this.position.clone().add(this.velocity);
+    dest.copy(this.planet.heightmap.placeOnSurface(dest));
+    this.velocity.copy(dest.sub(this.position));
+    this.velocity.normalize();
+
+    if (this.debugVelocity) {
+      this.debugVelocity.geometry.vertices[0].copy(this.position);
+      this.debugVelocity.geometry.vertices[1].copy(this.position.clone().add(this.velocity));
+      this.debugVelocity.geometry.verticesNeedUpdate = true;
+    }
+
+
+    const v = this.velocity.clone().multiplyScalar(millis * 0.003);
+
+    this.position.add(v);
+
+    this.position.copy(this.planet.heightmap.placeOnSurface(this.position));
+    this.t += millis / 1500.0;
+  }
+}
+
+
 class PathFactory {
   constructor(heightmap, navmesh, planet, options) {
     this.heightmap = heightmap;
     this.navmesh = navmesh;
     this.planet = planet;
-    this.options = _.extend({}, defaultPathOptions, options || {});
+    this.options = _.extend({}, defaultOptions, options || {});
   }
 
   /**
@@ -176,6 +229,13 @@ class PathFactory {
         this.heightmap,
         this.navmesh,
         this.planet,
+        this.options);
+  }
+
+  wander(position) {
+    return new Wanderer(
+        this.planet,
+        position,
         this.options);
   }
 }
