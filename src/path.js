@@ -6,9 +6,9 @@ import Debug from './debug.js';
 import PlanetMath from './planet-math.js';
 
 const defaultOptions = {
-  accel: 0.00005,
-  maxSpeed: 0.002, // units/s
-  targetDistance: 0.02,
+  accel: 0.008,
+  maxSpeed: 0.1, // units/s
+  targetDistance: 0.5,
   debug: true,
 };
 
@@ -41,11 +41,9 @@ class Position {
 }
 
 class Pather {
-  constructor(startPos, destPos, heightmap, navmesh, planet, options) {
+  constructor(startPos, destPos, planet, options) {
     this.currentPos = startPos;
     this.destPos = destPos;
-    this.heightmap = heightmap;
-    this.navmesh = navmesh;
     this.planet = planet;
     this.options = options;
     this.options.targetDistanceSq = this.options.targetDistance * this.options.targetDistance;
@@ -54,13 +52,13 @@ class Pather {
 
     if (this.options.debug) {
       this.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0xff00ff);
-      this.planet.add(this.debugVelocity);
+      this.planet.sphere.add(this.debugVelocity);
 
       this.currentFaceDebug = Debug.createMarker(new THREE.Vector3(), 0.02,  0x00ff00);
-      this.planet.add(this.currentFaceDebug);
+      this.planet.sphere.add(this.currentFaceDebug);
 
       this.currentDestDebug = Debug.createMarker(new THREE.Vector3(), 0.02,  0xff0000);
-      this.planet.add(this.currentDestDebug);
+      this.planet.sphere.add(this.currentDestDebug);
     }
 
     this.repath();
@@ -69,7 +67,7 @@ class Pather {
   repath() {
     const startIndex = this.currentPos.face.face.faceIndex;
     const endIndex = this.destPos.face.face.faceIndex;
-    this.path = this.navmesh.findPath(startIndex, endIndex);
+    this.path = this.planet.navmesh.findPath(startIndex, endIndex);
     console.log(`pathable? ${this.isPathable()}`);
   }
 
@@ -93,15 +91,15 @@ class Pather {
     let pathIndex = this.path.indexOf(this.currentFaceIndex);
     if (pathIndex == -1) {
       this.repath();
-      this.currentFaceIndex = this.heightmap.locateFace(this.currentPos.cartesian).faceIndex;
+      this.currentFaceIndex = this.planet.heightmap.locateFace(this.currentPos.cartesian).faceIndex;
       pathIndex = this.path.indexOf(this.currentFaceIndex);
     }
 
     const dest = this.getNextDestination(pathIndex);
-    const face = this.heightmap.geometry.faces[this.currentFaceIndex];
+    const face = this.planet.heightmap.geometry.faces[this.currentFaceIndex];
 
     if (this.options.debug) {
-      this.currentFaceDebug.position.copy(this.heightmap.faceCentroidCartesian(face));
+      this.currentFaceDebug.position.copy(this.planet.heightmap.faceCentroidCartesian(face));
       this.currentDestDebug.position.copy(dest);
     }
 
@@ -127,7 +125,7 @@ class Pather {
     }
 
     this.currentPos.setCartesian(this.currentPos.cartesian.add(this.velocity));
-    this.currentFaceIndex = this.heightmap.locateFace(this.currentPos.cartesian).faceIndex;
+    this.currentFaceIndex = this.planet.heightmap.locateFace(this.currentPos.cartesian).faceIndex;
   }
 
   // in cartesian space
@@ -137,7 +135,7 @@ class Pather {
       return this.destPos.cartesian;
     } else {
       // path to next face
-      return this.navmesh.findCentroid(this.path[pathIndex], this.path[pathIndex + 1]);
+      return this.planet.navmesh.findCentroid(this.path[pathIndex], this.path[pathIndex + 1]);
     }
   }
 
@@ -212,9 +210,7 @@ class Wanderer {
 
 
 class PathFactory {
-  constructor(heightmap, navmesh, planet, options) {
-    this.heightmap = heightmap;
-    this.navmesh = navmesh;
+  constructor(planet, options) {
     this.planet = planet;
     this.options = _.extend({}, defaultOptions, options || {});
   }
@@ -224,10 +220,8 @@ class PathFactory {
    */
   findPath(startPos, destPos) {
     return new Pather(
-        Position.fromCartesian(startPos.clone(), this.heightmap),
-        Position.fromCartesian(destPos.clone(), this.heightmap),
-        this.heightmap,
-        this.navmesh,
+        Position.fromCartesian(startPos.clone(), this.planet.heightmap),
+        Position.fromCartesian(destPos.clone(), this.planet.heightmap),
         this.planet,
         this.options);
   }

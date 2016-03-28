@@ -91,6 +91,7 @@ class Editor {
       seed: this.planet.seed,
       heightmap: this.planet.heightmap,
       nibbles: this.nibbles,
+      size: size,
     };
 
     const wrappedData = `${JSON.stringify(data)}\n`;

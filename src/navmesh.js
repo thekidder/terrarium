@@ -5,8 +5,9 @@ import THREE from 'three';
 import { PriorityQueue } from 'es-collections';
 
 class Navmesh {
-  constructor(geometry) {
+  constructor(geometry, size) {
     this.geometry = geometry;
+    this.size = size;
   }
 
   build() {
@@ -81,7 +82,7 @@ class Navmesh {
     const verticesAboveWater = _.reduce(
         testVertices,
         function(memo, v) {
-          return memo + (this.geometry.vertices[v].lengthSq() > 1 ? 1 : 0);
+          return memo + (this.geometry.vertices[v].lengthSq() > (this.size * this.size) ? 1 : 0);
         }.bind(this),
         0);
 

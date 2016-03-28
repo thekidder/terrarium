@@ -7,8 +7,9 @@ import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 
 class Planet {
-  constructor(scene, heightmap, waterRadius) {
-    this.waterHeight = waterRadius * 1.02;
+  constructor(scene, heightmap, size) {
+    this.size = size;
+    this.waterHeight = size;
     this.sandThreshold = 0.3;
 
     this.scene = scene;
@@ -68,7 +69,7 @@ class Planet {
     this.sphere = new THREE.Mesh(this.heightmap.geometry, this.material);
     this.sphere.name = "heightmap";
 
-    this.navmesh = new Navmesh(this.heightmap.geometry);
+    this.navmesh = new Navmesh(this.heightmap.geometry, this.size);
     this.navmesh.build();
 
     this.scene.add(this.sphere);
@@ -79,7 +80,7 @@ class Planet {
       const s = 2.4;
       let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 5000.0);
       noise = noise * 0.5 + 0.5;
-      v.copy(v.original.clone().multiplyScalar(this.waterHeight - noise * 0.07));
+      v.copy(v.original.clone().multiplyScalar(this.waterHeight - noise));
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 
