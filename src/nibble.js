@@ -27,6 +27,8 @@ class Nibble {
   wander() {
     this.movementBehaviors.length = 0;
     this.movementBehaviors.push(this.pathFactory.wander(this.position));
+    this.movementBehaviors.push(this.pathFactory.avoidWater());
+    this.movementBehaviors.push(this.pathFactory.constrainToRadius(this.position, 5.0));
   }
 
   pathTo(dest) {
@@ -44,7 +46,7 @@ class Nibble {
       const v = behavior.update(millis, this.lastVelocity, this.position);
       this.currentVelocity.add(v);
 
-      if (behavior.options.debug) {
+      if (behavior.options && behavior.options.debug) {
         if (!behavior.debugVelocity) {
           behavior.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0x00ff00);
           this.planet.sphere.add(behavior.debugVelocity);

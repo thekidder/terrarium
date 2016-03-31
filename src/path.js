@@ -13,7 +13,7 @@ const defaultOptions = {
   debug: true,
 };
 
-class Pather {
+class PathToBehavior {
   constructor(startPos, destPos, planet, options) {
     this.destPos = destPos;
     this.planet = planet;
@@ -113,8 +113,8 @@ class Pather {
   }
 }
 
-class Wanderer {
-  constructor(planet, position, options) {
+class WanderBehavior {
+  constructor(position, planet, options) {
     this.planet = planet;
     this.simplex = new Simplex();
     this.options = options;
@@ -148,19 +148,71 @@ class Wanderer {
 
     this.velocity.normalize().multiplyScalar(this.options.maxSpeed);
 
+    this.t += millis / 1500.0;
+
+    return this.velocity;
+  }
+}
+
+class AvoidWaterBehavior {
+  constructor(planet, options) {
+    this.planet = planet;
+    this.options = options;
+    this.velocity = new THREE.Vector3();
+  }
+
+  update(millis, lastVelocity, position) {
     if (position.cartesian.lengthSq() < this.planet.size * this.planet.size) {
       const face = position.face.face;
       const highestVert = _.max(
           [face.a, face.b, face.c],
           function(v) { return this.planet.heightmap.geometry.vertices[v].lengthSq(); }.bind(this));
-      const waterInfluence = this.planet.heightmap.geometry.vertices[highestVert].clone().sub(position.cartesian)
+      this.velocity.copy(this.planet.heightmap.geometry.vertices[highestVert]).sub(position.cartesian)
           .normalize()
           .multiplyScalar((this.planet.size * this.planet.size - position.cartesian.lengthSq()) / (this.planet.size * this.planet.size))
           .multiplyScalar(40);
-      this.velocity.add(waterInfluence);
+    } else {
+      this.velocity.set(0, 0, 0);
+    }
+    return this.velocity;
+  }
+}
+
+class ConstrainToRadiusBehavior {
+  constructor(position, radius, planet, options) {
+    this.position = position.cartesian.clone();
+    this.radius = radius;
+    this.radiusSq = radius * radius;
+    this.options = options;
+    this.velocity = new THREE.Vector3();
+
+    if (this.options.debug) {
+      this.constraintPoint = Debug.createMarker(new THREE.Vector3(), 0.5,  0x0000ff);
+      planet.sphere.add(this.constraintPoint);
+      this.constraintPoint.position.copy(position.cartesian);
+
+      this.constraintLine = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0x0000ff);
+      planet.sphere.add(this.constraintLine);
+    }
+  }
+
+  update(millis, lastVelocity, position) {
+    const distSq = position.cartesian.distanceToSquared(this.position);
+
+    if (distSq > this.radiusSq) {
+      this.velocity.copy(this.position).sub(position.cartesian)
+          .normalize()
+          .multiplyScalar((distSq - this.radiusSq) / this.radiusSq)
+          .multiplyScalar(0.05);
+    } else {
+      this.velocity.set(0, 0, 0);
     }
 
-    this.t += millis / 1500.0;
+    if (this.constraintLine) {
+      this.constraintLine.geometry.vertices[0].copy(this.position);
+      this.constraintLine.geometry.vertices[1].copy(position.cartesian).sub(this.position).setLength(this.radius).add(this.position);
+      this.constraintLine.geometry.verticesNeedUpdate = true;
+    }
 
     return this.velocity;
   }
@@ -177,7 +229,7 @@ class PathFactory {
    * All arguments are cartesian positions
    */
   findPath(startPos, destPos) {
-    return new Pather(
+    return new PathToBehavior(
         startPos,
         destPos,
         this.planet,
@@ -185,10 +237,18 @@ class PathFactory {
   }
 
   wander(position) {
-    return new Wanderer(
-        this.planet,
+    return new WanderBehavior(
         position,
+        this.planet,
         this.options);
+  }
+
+  constrainToRadius(position, radius) {
+    return new ConstrainToRadiusBehavior(position, radius, this.planet, this.options);
+  }
+
+  avoidWater() {
+    return new AvoidWaterBehavior(this.planet, this.options);
   }
 }
 
