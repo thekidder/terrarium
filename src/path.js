@@ -169,7 +169,9 @@ class Wanderer {
 
     if (options.debug) {
       this.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0xff0000);
+      this.debugVelocityWater = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0x00ff00);
       this.planet.sphere.add(this.debugVelocity);
+      this.planet.sphere.add(this.debugVelocityWater);
     }
   }
 
@@ -192,19 +194,46 @@ class Wanderer {
     this.velocity.copy(dest.sub(this.position));
     this.velocity.normalize();
 
+    const v = this.velocity.clone().multiplyScalar(millis * 0.003);
+
     if (this.debugVelocity) {
       this.debugVelocity.geometry.vertices[0].copy(this.position);
-      this.debugVelocity.geometry.vertices[1].copy(this.position.clone().add(this.velocity));
+      this.debugVelocity.geometry.vertices[1].copy(this.position.clone().add(v.clone().multiplyScalar(40)));
       this.debugVelocity.geometry.verticesNeedUpdate = true;
     }
 
+    if (this.position.lengthSq() < this.planet.size * this.planet.size) {
+      const face = this.planet.heightmap.locateFace(this.position);
+      const highestVert = _.max(
+          [face.a, face.b, face.c],
+          function(v) { return this.planet.heightmap.geometry.vertices[v].lengthSq(); }.bind(this));
+      const waterInfluence = this.planet.heightmap.geometry.vertices[highestVert].clone().sub(this.position)
+          .normalize()
+          .multiplyScalar((this.planet.size * this.planet.size - this.position.lengthSq()) / (this.planet.size * this.planet.size))
+          .multiplyScalar(4 * millis * 0.01);
+      v.add(waterInfluence);
+    }
 
-    const v = this.velocity.clone().multiplyScalar(millis * 0.003);
+    if (this.debugVelocityWater) {
+      this.debugVelocityWater.geometry.vertices[0].copy(this.position);
+      this.debugVelocityWater.geometry.vertices[1].copy(this.position.clone().add(v.clone().multiplyScalar(40)));
+      this.debugVelocityWater.geometry.verticesNeedUpdate = true;
+    }
+
+    // const vertsUnderWater = _.reduce([face.a, face.b, face.c], function(memo, v) {
+    //   return memo + ((this.planet.heightmap.geometry.vertices[v].lengthSq() < this.planet.size * this.planet.size) ? 1 : 0);
+    // }.bind(this), 0);
+
+    // console.log(vertsUnderWater);
 
     this.position.add(v);
 
     this.position.copy(this.planet.heightmap.placeOnSurface(this.position));
     this.t += millis / 1500.0;
+
+    // if (!this.planet.navmesh.isTraversable(faceIndex)) {
+    //   console.log('swimming!');
+    // }
   }
 }
 

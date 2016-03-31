@@ -43,11 +43,28 @@ class Game {
 
       const destFace = this.planet.randomFace();
       const dest = this.planet.heightmap.faceCentroidCartesian(destFace);
-      nibble.pathTo(dest);
-      // nibble.wander();
+      //nibble.pathTo(dest);
+      nibble.wander();
 
       this.nibbles.push(nibble);
     }
+
+    this.lookAtNibbles();
+  }
+
+  lookAtNibbles() {
+    const avgPos = new THREE.Vector3();
+    for (const nibble of this.nibbles) {
+      avgPos.add(nibble.marker.position);
+    }
+
+    avgPos.multiplyScalar(this.nibbles.length);
+
+    const pos = avgPos.normalize().multiplyScalar(this.size * 2.2);
+
+    this.camera.position.copy(pos);
+    this.camera.up = new THREE.Vector3(0,0,1);
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
   }
 
   update(millis) {
@@ -61,19 +78,9 @@ class Game {
 
     this.planet.update(millis);
 
-    const avgPos = new THREE.Vector3();
     for (const nibble of this.nibbles) {
-      avgPos.add(nibble.marker.position);
       nibble.update(millis);
     }
-
-    avgPos.multiplyScalar(this.nibbles.length);
-
-    const pos = avgPos.normalize().multiplyScalar(this.size * 2.2);
-
-    this.camera.position.copy(pos);
-    this.camera.up = new THREE.Vector3(0,0,1);
-    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
   }
 
   findPath(start, end) {
