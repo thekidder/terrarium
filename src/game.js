@@ -43,8 +43,8 @@ class Game {
 
       const destFace = this.planet.randomFace();
       const dest = this.planet.heightmap.faceCentroidCartesian(destFace);
-      //nibble.pathTo(dest);
-      nibble.wander();
+      nibble.pathTo(dest);
+      //nibble.wander();
 
       this.nibbles.push(nibble);
     }

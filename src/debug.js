@@ -32,6 +32,12 @@ const Debug = {
 
     return line;
   },
+
+  drawDebugVelocity: function(line, position, velocity) {
+    line.geometry.vertices[0].copy(position);
+    line.geometry.vertices[1].copy(position).add(velocity);
+    line.geometry.verticesNeedUpdate = true;
+  },
 };
 
 export default Debug;

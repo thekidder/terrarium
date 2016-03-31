@@ -6,66 +6,34 @@ import Debug from './debug.js';
 import PlanetMath from './planet-math.js';
 
 const defaultOptions = {
-  accel: 0.008,
-  maxSpeed: 0.1, // units/s
+  accel: 0.02, // units/s/s
+  maxSpeed: 2, // units/s
+  rotationSpeed: 0.2, // rads/s
   targetDistance: 0.5,
   debug: true,
 };
 
-class Position {
-  constructor(heightmap) {
-    this.heightmap = heightmap;
-  }
-
-  static fromCartesian(cartesian, heightmap) {
-    const pos = new Position(heightmap);
-    pos.setCartesian(cartesian);
-    return pos;
-  }
-
-  static fromFace(face, heightmap) {
-    const pos = new Position(heightmap);
-    pos.setFace(face);
-    return pos;
-  }
-
-  setFace(face) {
-    this.face = face;
-    this.cartesian = this.heightmap.fromFaceCoords(face);
-  }
-
-  setCartesian(cartesian) {
-    this.cartesian = cartesian;
-    this.face = this.heightmap.toFaceCoords(this.cartesian);
-  }
-}
-
 class Pather {
   constructor(startPos, destPos, planet, options) {
-    this.currentPos = startPos;
     this.destPos = destPos;
     this.planet = planet;
     this.options = options;
     this.options.targetDistanceSq = this.options.targetDistance * this.options.targetDistance;
     this.velocity = new THREE.Vector3();
-    this.currentFaceIndex = this.currentPos.face.face.faceIndex;
 
     if (this.options.debug) {
-      this.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0xff00ff);
-      this.planet.sphere.add(this.debugVelocity);
-
-      this.currentFaceDebug = Debug.createMarker(new THREE.Vector3(), 0.02,  0x00ff00);
+      this.currentFaceDebug = Debug.createMarker(new THREE.Vector3(), 0.5,  0x00ff00);
       this.planet.sphere.add(this.currentFaceDebug);
 
-      this.currentDestDebug = Debug.createMarker(new THREE.Vector3(), 0.02,  0xff0000);
+      this.currentDestDebug = Debug.createMarker(new THREE.Vector3(), 0.5,  0xff0000);
       this.planet.sphere.add(this.currentDestDebug);
     }
 
-    this.repath();
+    this.repath(startPos);
   }
 
-  repath() {
-    const startIndex = this.currentPos.face.face.faceIndex;
+  repath(startPos) {
+    const startIndex = startPos.face.face.faceIndex;
     const endIndex = this.destPos.face.face.faceIndex;
     this.path = this.planet.navmesh.findPath(startIndex, endIndex);
     console.log(`pathable? ${this.isPathable()}`);
@@ -75,28 +43,28 @@ class Pather {
     return this.path !== null;
   }
 
-  step(millis) {
-    if (!this.isPathable()) { return; }
-
-    if (this.destPos.cartesian.distanceToSquared(this.currentPos.cartesian) < this.options.targetDistanceSq) {
+  update(millis, lastVelocity, position) {
+    if (!this.isPathable()) {
       this.velocity.set(0, 0, 0);
-      if (this.options.debug) {
-        this.debugVelocity.geometry.vertices[0].copy(this.currentPos.cartesian);
-        this.debugVelocity.geometry.vertices[1].copy(this.currentPos.cartesian);
-        this.debugVelocity.geometry.verticesNeedUpdate = true;
-      }
-      return;
+      return this.velocity;
     }
 
-    let pathIndex = this.path.indexOf(this.currentFaceIndex);
+    if (this.destPos.cartesian.distanceToSquared(position.cartesian) < this.options.targetDistanceSq) {
+      this.velocity.set(0, 0, 0);
+      return this.velocity;
+    }
+
+    this.velocity.copy(lastVelocity);
+
+    const currentFaceIndex = position.face.face.faceIndex;
+    let pathIndex = this.path.indexOf(currentFaceIndex);
     if (pathIndex == -1) {
-      this.repath();
-      this.currentFaceIndex = this.planet.heightmap.locateFace(this.currentPos.cartesian).faceIndex;
-      pathIndex = this.path.indexOf(this.currentFaceIndex);
+      this.repath(position);
+      pathIndex = this.path.indexOf(currentFaceIndex);
     }
 
     const dest = this.getNextDestination(pathIndex);
-    const face = this.planet.heightmap.geometry.faces[this.currentFaceIndex];
+    const face = position.face.face;
 
     if (this.options.debug) {
       this.currentFaceDebug.position.copy(this.planet.heightmap.faceCentroidCartesian(face));
@@ -104,28 +72,15 @@ class Pather {
     }
 
     const direction = this.getDeltaV(
-        this.velocity, this.currentPos.cartesian, dest, pathIndex == this.path.length - 1);
+        this.velocity, position.cartesian, dest, pathIndex == this.path.length - 1);
 
     this.velocity.add(direction);
 
-    const speed = this.options.maxSpeed;
-    this.velocity.applyMatrix4(face.toFaceVector);
-    this.velocity.z = 0.0;
-    this.velocity.applyMatrix4(face.fromFaceVector);
-
-    if (this.velocity.lengthSq() > speed * speed) {
-      this.velocity.setLength(speed);
+    if (this.velocity.lengthSq() > this.options.maxSpeed * this.options.maxSpeed) {
+      this.velocity.setLength(this.options.maxSpeed);
     }
 
-    if (this.options.debug) {
-      this.debugVelocity.geometry.vertices[0].copy(this.currentPos.cartesian);
-      this.debugVelocity.geometry.vertices[1].copy(this.currentPos.cartesian)
-          .add(this.velocity.clone().setLength(0.1));
-      this.debugVelocity.geometry.verticesNeedUpdate = true;
-    }
-
-    this.currentPos.setCartesian(this.currentPos.cartesian.add(this.velocity));
-    this.currentFaceIndex = this.planet.heightmap.locateFace(this.currentPos.cartesian).faceIndex;
+    return this.velocity;
   }
 
   // in cartesian space
@@ -161,11 +116,13 @@ class Pather {
 class Wanderer {
   constructor(planet, position, options) {
     this.planet = planet;
-    this.position = position;
     this.simplex = new Simplex();
-    this.velocity = this.randomFaceVelocity(position);
+    this.options = options;
     this.rotation = new THREE.Quaternion();
+    this.dest = new THREE.Vector3();
     this.t = 0;
+
+    this.velocity = this.randomFaceVelocity(position);
 
     if (options.debug) {
       this.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0xff0000);
@@ -176,64 +133,36 @@ class Wanderer {
   }
 
   randomFaceVelocity(pos) {
-    const faceCoords = this.planet.heightmap.toFaceCoords(pos);
-    faceCoords.uv.x += Math.random() * 2 - 1;
-    faceCoords.uv.y += Math.random() * 2 - 1;
-    const direction = this.planet.heightmap.fromFaceCoords(faceCoords);
-    direction.sub(pos).normalize();
-    return direction;
+    const direction = pos.clone();
+    direction.face.uv.x += Math.random() * 2 - 1;
+    direction.face.uv.y += Math.random() * 2 - 1;
+    direction.setFace(direction.face);
+    return direction.cartesian.sub(pos.cartesian).normalize().multiplyScalar(this.options.maxSpeed);
   }
 
-  step(millis) {
+  update(millis, lastVelocity, position) {
     const angle = this.simplex.noise2D(this.t, 0);
-    this.rotation.setFromAxisAngle(this.position, angle * millis * 0.0002);
+    this.rotation.setFromAxisAngle(position.cartesian, angle * millis * 0.001 * this.options.rotationSpeed);
+    this.velocity.copy(lastVelocity);
     this.velocity.applyQuaternion(this.rotation);
 
-    const dest = this.position.clone().add(this.velocity);
-    dest.copy(this.planet.heightmap.placeOnSurface(dest));
-    this.velocity.copy(dest.sub(this.position));
-    this.velocity.normalize();
+    this.velocity.normalize().multiplyScalar(this.options.maxSpeed);
 
-    const v = this.velocity.clone().multiplyScalar(millis * 0.003);
-
-    if (this.debugVelocity) {
-      this.debugVelocity.geometry.vertices[0].copy(this.position);
-      this.debugVelocity.geometry.vertices[1].copy(this.position.clone().add(v.clone().multiplyScalar(40)));
-      this.debugVelocity.geometry.verticesNeedUpdate = true;
-    }
-
-    if (this.position.lengthSq() < this.planet.size * this.planet.size) {
-      const face = this.planet.heightmap.locateFace(this.position);
+    if (position.cartesian.lengthSq() < this.planet.size * this.planet.size) {
+      const face = position.face.face;
       const highestVert = _.max(
           [face.a, face.b, face.c],
           function(v) { return this.planet.heightmap.geometry.vertices[v].lengthSq(); }.bind(this));
-      const waterInfluence = this.planet.heightmap.geometry.vertices[highestVert].clone().sub(this.position)
+      const waterInfluence = this.planet.heightmap.geometry.vertices[highestVert].clone().sub(position.cartesian)
           .normalize()
-          .multiplyScalar((this.planet.size * this.planet.size - this.position.lengthSq()) / (this.planet.size * this.planet.size))
-          .multiplyScalar(4 * millis * 0.01);
-      v.add(waterInfluence);
+          .multiplyScalar((this.planet.size * this.planet.size - position.cartesian.lengthSq()) / (this.planet.size * this.planet.size))
+          .multiplyScalar(40);
+      this.velocity.add(waterInfluence);
     }
 
-    if (this.debugVelocityWater) {
-      this.debugVelocityWater.geometry.vertices[0].copy(this.position);
-      this.debugVelocityWater.geometry.vertices[1].copy(this.position.clone().add(v.clone().multiplyScalar(40)));
-      this.debugVelocityWater.geometry.verticesNeedUpdate = true;
-    }
-
-    // const vertsUnderWater = _.reduce([face.a, face.b, face.c], function(memo, v) {
-    //   return memo + ((this.planet.heightmap.geometry.vertices[v].lengthSq() < this.planet.size * this.planet.size) ? 1 : 0);
-    // }.bind(this), 0);
-
-    // console.log(vertsUnderWater);
-
-    this.position.add(v);
-
-    this.position.copy(this.planet.heightmap.placeOnSurface(this.position));
     this.t += millis / 1500.0;
 
-    // if (!this.planet.navmesh.isTraversable(faceIndex)) {
-    //   console.log('swimming!');
-    // }
+    return this.velocity;
   }
 }
 
@@ -249,8 +178,8 @@ class PathFactory {
    */
   findPath(startPos, destPos) {
     return new Pather(
-        Position.fromCartesian(startPos.clone(), this.planet.heightmap),
-        Position.fromCartesian(destPos.clone(), this.planet.heightmap),
+        startPos,
+        destPos,
         this.planet,
         this.options);
   }

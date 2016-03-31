@@ -1,4 +1,6 @@
 import _ from 'underscore';
+
+import { FacePosition } from './position.js';
 import PlanetMath from './planet-math.js';
 import THREE from 'three';
 
@@ -110,7 +112,7 @@ class Heightmap {
 
   toFaceCoords(cartesianCoords) {
     const face = this.locateFace(cartesianCoords);
-    return { face: face, uv: new THREE.Vector3(cartesianCoords.x, cartesianCoords.y, cartesianCoords.z).applyMatrix4(face.toFaceBasis) };
+    return new FacePosition(face, new THREE.Vector3(cartesianCoords.x, cartesianCoords.y, cartesianCoords.z).applyMatrix4(face.toFaceBasis));
   }
 
   fromFaceCoords(faceCoords) {
