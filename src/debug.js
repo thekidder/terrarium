@@ -24,6 +24,8 @@ const Debug = {
       color: color,
     });
 
+    material.depthTest = false;
+
     const geometry = new THREE.Geometry();
     geometry.vertices.push(start, end);
 
