@@ -10,7 +10,7 @@ const defaultOptions = {
   maxSpeed: 2, // units/s
   rotationSpeed: 0.2, // rads/s
   targetDistance: 0.5,
-  debug: true,
+  debug: false,
 };
 
 class PathToBehavior {
@@ -117,10 +117,12 @@ class WanderBehavior {
   constructor(position, planet, options) {
     this.planet = planet;
     this.simplex = new Simplex();
+    this.timeSimplex = new Simplex();
     this.options = options;
     this.rotation = new THREE.Quaternion();
     this.dest = new THREE.Vector3();
     this.t = 0;
+    this.rawT = 0;
 
     this.velocity = this.randomFaceVelocity(position);
 
@@ -148,9 +150,18 @@ class WanderBehavior {
 
     this.velocity.normalize().multiplyScalar(this.options.maxSpeed);
 
-    this.t += millis / 1500.0;
+    const speed = this.getAdvancement(millis);
 
-    return this.velocity;
+    this.t += millis * speed / 1500;
+    return this.velocity.multiplyScalar(speed);
+  }
+
+  getAdvancement(millis) {
+    const t = Math.max(0.0, this.timeSimplex.noise2D(this.rawT, 0) * 0.5 + 0.5 - 0.05);
+
+    this.rawT += millis / 8000;
+
+    return t;
   }
 }
 
