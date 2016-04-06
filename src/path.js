@@ -157,7 +157,7 @@ class WanderBehavior {
   }
 
   getAdvancement(millis) {
-    const t = Math.max(0.0, this.timeSimplex.noise2D(this.rawT, 0) * 0.5 + 0.5 - 0.05);
+    const t = Math.max(0.0, this.timeSimplex.noise2D(this.rawT, 0) * 0.5 + 0.5 - 0.1);
 
     this.rawT += millis / 8000;
 
