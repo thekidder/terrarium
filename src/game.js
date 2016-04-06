@@ -20,6 +20,11 @@ class Game {
 
     console.log('loading planet data...');
     loader.load('/assets/planet-data.json', this.planetLoaded.bind(this));
+
+    this.raycaster = new THREE.Raycaster();
+    this.mouseEvent = new THREE.Vector2();
+
+    this.markers = [];
   }
 
   planetLoaded(data) {
@@ -130,34 +135,27 @@ class Game {
   }
 
   onKeyDown(event) {
-    //this.planet.seed = Math.random();
-    //this.planet.needsRegeneration = true;
   }
 
   onMouseDown(event) {
-    this.dragStartEvent = event;
-    this.drag = true;
+    this.mouseEvent.x = event.clientX / window.innerWidth * 2 - 1;
+    this.mouseEvent.y = -event.clientY / window.innerHeight * 2 + 1;
+
+    this.placeMarker(this.mouseEvent);
   }
 
-  onMouseUp(event) {
-    this.drag = false;
-  }
+  placeMarker(mousePos) {
+    this.raycaster.setFromCamera(mousePos, this.camera);
+    //const objs = [this.planet.sphere].concat(_.map(this.markers, m => m.object));
+    const intersections = this.raycaster.intersectObject(this.planet.sphere, true);
 
-  onMouseMove(event) {
-    if(this.drag && false) {
-      const x = event.screenX - this.dragStartEvent.screenX;
-      const y = event.screenY - this.dragStartEvent.screenY;
+    if (intersections.length > 0) {
+      const pos = this.raycaster.ray.at(intersections[0].distance);
+      console.log(`adding marker at ${JSON.stringify(pos)}`);
+      const marker = new MovementMarker(this.planet, null, pos);
+      this.markers.push(marker);
 
-      this.planet.scale += x * 0.0005;
-      this.planet.magnitude += y * 0.0005;
-
-      this.planet.scale = Math.max(Math.min(this.planet.scale, 10.0), 0.1);
-      this.planet.magnitude = Math.max(Math.min(this.planet.magnitude, 0.9), 0.0);
-
-      console.log(`scale: ${this.planet.scale}, magnitude: ${this.planet.magnitude}`);
-
-      this.planet.needsRegeneration = true;
-      this.dragStartEvent = event;
+      console.log(`intersection: ${intersections[0].faceIndex}`);
     }
   }
 }
