@@ -4,6 +4,7 @@ import THREE from 'three';
 
 import Debug from './debug.js';
 import Heightmap from './heightmap.js';
+import MovementMonument from './monuments.js';
 import Nibble from './nibble.js';
 import PathFactory from './path.js';
 import Planet from './planet.js';
@@ -24,7 +25,26 @@ class Game {
     this.raycaster = new THREE.Raycaster();
     this.mouseEvent = new THREE.Vector2();
 
-    this.markers = [];
+    this.monuments = [];
+
+    new THREE.ObjectLoader().load(
+      // resource URL
+      'assets/marker1.json',
+      // Function when resource is loaded
+      function ( object, materials ) {
+        const material = new THREE.MeshPhongMaterial({
+          color: 0x555555,
+          emissive: 0x333333,
+          side: THREE.DoubleSide,
+          shading: THREE.FlatShading,
+        });
+        object.traverse(function(o) {
+          o.material = material;
+        });
+
+        this.markerObj = object;
+      }.bind(this)
+    );
   }
 
   planetLoaded(data) {
@@ -141,19 +161,25 @@ class Game {
     this.mouseEvent.x = event.clientX / window.innerWidth * 2 - 1;
     this.mouseEvent.y = -event.clientY / window.innerHeight * 2 + 1;
 
-    this.placeMarker(this.mouseEvent);
+    this.placeMonument(this.mouseEvent);
   }
 
-  placeMarker(mousePos) {
+  onMouseUp(event) {
+  }
+
+  onMouseMove(event) {
+  }
+
+  placeMonument(mousePos) {
     this.raycaster.setFromCamera(mousePos, this.camera);
     //const objs = [this.planet.sphere].concat(_.map(this.markers, m => m.object));
     const intersections = this.raycaster.intersectObject(this.planet.sphere, true);
 
     if (intersections.length > 0) {
       const pos = this.raycaster.ray.at(intersections[0].distance);
-      console.log(`adding marker at ${JSON.stringify(pos)}`);
-      const marker = new MovementMarker(this.planet, null, pos);
-      this.markers.push(marker);
+      console.log(`adding monument at ${JSON.stringify(pos)}`);
+      const monument = new MovementMonument(this.scene, this.markerObj, intersections[0].face.normal, pos);
+      this.monuments.push(monument);
 
       console.log(`intersection: ${intersections[0].faceIndex}`);
     }
