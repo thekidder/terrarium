@@ -40,6 +40,12 @@ class Nibble {
     this.move(millis);
   }
 
+  monument(monument) {
+    this.movementBehaviors.length = 0;
+    this.movementBehaviors.push(this.pathFactory.avoidWater());
+    this.movementBehaviors.push(this.pathFactory.monument(this.position, monument));
+  }
+
   move(millis) {
     this.currentVelocity.set(0, 0, 0);
     for (const behavior of this.movementBehaviors) {

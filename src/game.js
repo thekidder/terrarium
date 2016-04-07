@@ -178,10 +178,14 @@ class Game {
     if (intersections.length > 0) {
       const pos = this.raycaster.ray.at(intersections[0].distance);
       console.log(`adding monument at ${JSON.stringify(pos)}`);
-      const monument = new MovementMonument(this.scene, this.markerObj, intersections[0].face.normal, pos);
+      const monument = new MovementMonument(this.scene, this.planet, this.markerObj, intersections[0].face.normal, pos);
       this.monuments.push(monument);
 
       console.log(`intersection: ${intersections[0].faceIndex}`);
+
+      for (const nibble of this.nibbles) {
+        nibble.monument(monument);
+      }
     }
   }
 }

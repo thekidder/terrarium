@@ -175,7 +175,7 @@ class Navmesh {
     while (open.size) {
       const current = open.remove();
       if (current.index === to) {
-        console.log(`evaluated ${closed.size} nodes`);
+        console.log(`evaluated ${costSoFar.size} nodes`);
         return cameFrom;
       }
 

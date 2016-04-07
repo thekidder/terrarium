@@ -8,9 +8,15 @@ import PlanetMath from './planet-math.js';
 const defaultOptions = {
   accel: 0.02, // units/s/s
   maxSpeed: 2, // units/s
-  rotationSpeed: 0.2, // rads/s
+  rotationSpeed: 0.13, // rads/s
   targetDistance: 0.5,
-  debug: false,
+
+  // monument
+  innerWanderRadius: 2.0,
+  pathToRadius: 10.0,
+  outerWanderRadius: 20.0,
+
+  debug: true,
 };
 
 class PathToBehavior {
@@ -152,7 +158,7 @@ class WanderBehavior {
 
     const speed = this.getAdvancement(millis);
 
-    this.t += millis * speed / 1500;
+    this.t += millis * speed / 2200;
     return this.velocity.multiplyScalar(speed);
   }
 
@@ -194,7 +200,9 @@ class ConstrainToRadiusBehavior {
     this.position = position.cartesian.clone();
     this.radius = radius;
     this.radiusSq = radius * radius;
-    this.options = options;
+    this.innerRadiusSq = options.innerRadius || 0;
+    options.innerRadius *= options.innerRadius;
+    this.options = _.extend({}, defaultOptions, options || {});
     this.velocity = new THREE.Vector3();
 
     if (this.options.debug) {
@@ -213,7 +221,7 @@ class ConstrainToRadiusBehavior {
     if (distSq > this.radiusSq) {
       this.velocity.copy(this.position).sub(position.cartesian)
           .normalize()
-          .multiplyScalar((distSq - this.radiusSq) / this.radiusSq)
+          .multiplyScalar((distSq - this.radiusSq - this.innerRadiusSq) / this.radiusSq)
           .multiplyScalar(0.05);
     } else {
       this.velocity.set(0, 0, 0);
@@ -223,6 +231,46 @@ class ConstrainToRadiusBehavior {
       this.constraintLine.geometry.vertices[0].copy(this.position);
       this.constraintLine.geometry.vertices[1].copy(position.cartesian).sub(this.position).setLength(this.radius).add(this.position);
       this.constraintLine.geometry.verticesNeedUpdate = true;
+    }
+
+    return this.velocity;
+  }
+}
+
+class MonumentBehavior {
+  constructor(currentPos, monument, planet, options) {
+    this.monument = monument;
+    this.planet = planet;
+    this.options = _.extend({}, defaultOptions, options || {});
+    this.options.innerRadius = this.options.pathToRadius;
+
+    this.innerWanderRadiusSq = this.options.innerWanderRadius * this.options.innerWanderRadius;
+    this.pathToRadiusSq = this.options.pathToRadius * this.options.pathToRadius;
+    this.outerWanderRadiusSq = this.options.outerWanderRadius * this.options.outerWanderRadius;
+
+    this.innerBehavior = new ConstrainToRadiusBehavior(monument.position, this.options.innerWanderRadius, this.planet, this.options);
+    this.pathToBehavior = new PathToBehavior(currentPos, monument.position, this.planet, this.options);
+    this.outerBehavior = new ConstrainToRadiusBehavior(monument.position, this.options.outerWanderRadius, this.planet, this.options);
+
+    this.wander = new WanderBehavior(currentPos, this.planet, this.options);
+
+    this.velocity = new THREE.Vector3();
+  }
+
+  update(millis, lastVelocity, position) {
+    const distSq = position.cartesian.distanceToSquared(this.monument.position.cartesian);
+
+    if (distSq < this.innerWanderRadiusSq) {
+      this.velocity.copy(this.innerBehavior.update(millis, lastVelocity, position));
+      this.velocity.add(this.wander.update(millis, lastVelocity, position));
+    } else if (distSq < this.pathToRadiusSq) {
+      this.velocity.copy(this.pathToBehavior.update(millis, lastVelocity, position));
+      this.velocity.add(this.wander.update(millis, lastVelocity, position));
+    } else if (distSq < this.outerWanderRadiusSq) {
+      this.velocity.copy(this.outerBehavior.update(millis, lastVelocity, position));
+      this.velocity.add(this.wander.update(millis, lastVelocity, position));
+    } else {
+      this.velocity.set(0, 0, 0);
     }
 
     return this.velocity;
@@ -260,6 +308,10 @@ class PathFactory {
 
   avoidWater() {
     return new AvoidWaterBehavior(this.planet, this.options);
+  }
+
+  monument(pos, monument) {
+    return new MonumentBehavior(pos, monument, this.planet, this.options);
   }
 }
 
