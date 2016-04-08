@@ -6,7 +6,7 @@ import Debug from './debug.js';
 import Heightmap from './heightmap.js';
 import MovementMonument from './monuments.js';
 import Nibble from './nibble.js';
-import PathFactory from './path.js';
+import { PathFactory } from './path.js';
 import Planet from './planet.js';
 import PlanetMath from './planet-math.js';
 import Scene from './scene.js';

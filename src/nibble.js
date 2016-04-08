@@ -1,6 +1,7 @@
 import THREE from 'three';
 
 import Debug from './debug.js';
+import { BehaviorList } from './path.js';
 import { Position } from './position.js';
 
 class Nibble {
@@ -13,9 +14,8 @@ class Nibble {
 
     this.planet.sphere.add(this.marker);
 
-    this.movementBehaviors = [];
+    this.behaviors = new BehaviorList([], planet);
     this.position = Position.fromCartesian(position, planet.heightmap);
-    this.currentVelocity = new THREE.Vector3();
     this.lastVelocity = new THREE.Vector3();
 
     if (this.options.debug) {
@@ -25,15 +25,15 @@ class Nibble {
   }
 
   wander() {
-    this.movementBehaviors.length = 0;
-    this.movementBehaviors.push(this.pathFactory.wander(this.position));
-    this.movementBehaviors.push(this.pathFactory.avoidWater());
-    this.movementBehaviors.push(this.pathFactory.constrainToRadius(this.position, 5.0));
+    this.behaviors.clear();
+    this.behaviors.behaviors.push(this.pathFactory.wander(this.position));
+    this.behaviors.behaviors.push(this.pathFactory.avoidWater());
+    this.behaviors.behaviors.push(this.pathFactory.constrainToRadius(this.position, 5.0));
   }
 
   pathTo(dest) {
-    this.movementBehaviors.length = 0;
-    this.movementBehaviors.push(this.pathFactory.findPath(this.position, Position.fromCartesian(dest.clone(), this.planet.heightmap)));
+    this.behaviors.clear();
+    this.behaviors.behaviors.push(this.pathFactory.findPath(this.position, Position.fromCartesian(dest.clone(), this.planet.heightmap)));
   }
 
   update(millis) {
@@ -41,38 +41,22 @@ class Nibble {
   }
 
   monument(monument) {
-    this.movementBehaviors.length = 0;
-    this.movementBehaviors.push(this.pathFactory.avoidWater());
-    this.movementBehaviors.push(this.pathFactory.monument(this.position, monument));
+    this.behaviors.clear();
+    this.behaviors.behaviors.push(this.pathFactory.avoidWater());
+    this.behaviors.behaviors.push(this.pathFactory.monument(this.position, monument));
   }
 
   move(millis) {
-    this.currentVelocity.set(0, 0, 0);
-    for (const behavior of this.movementBehaviors) {
-      const v = behavior.update(millis, this.lastVelocity, this.position);
-      this.currentVelocity.add(v);
-
-      if (behavior.options && behavior.options.debug) {
-        if (!behavior.debugVelocity) {
-          behavior.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0x00ff00);
-          this.planet.sphere.add(behavior.debugVelocity);
-        }
-
-        Debug.drawDebugVelocity(behavior.debugVelocity, this.position.cartesian, v);
-      }
-    }
+    this.behaviors.update(millis, this.lastVelocity, this.position);
 
     // ensure velocity is on planet surface
-    this.currentVelocity.add(this.position.cartesian);
-    this.currentVelocity.copy(this.planet.heightmap.placeOnSurface(this.currentVelocity));
-    this.currentVelocity.sub(this.position.cartesian);
+    this.behaviors.velocity.add(this.position.cartesian);
+    this.behaviors.velocity.copy(this.planet.heightmap.placeOnSurface(this.behaviors.velocity));
+    this.behaviors.velocity.sub(this.position.cartesian);
 
-    if (this.debugVelocity) {
-      Debug.drawDebugVelocity(this.debugVelocity, this.position.cartesian, this.currentVelocity);
-    }
+    this.lastVelocity.copy(this.behaviors.velocity);
 
-    this.lastVelocity.copy(this.currentVelocity);
-    this.position.cartesian.add(this.currentVelocity.multiplyScalar(millis * 0.001));
+    this.position.cartesian.add(this.behaviors.velocity.multiplyScalar(millis * 0.001));
     this.position.cartesian.copy(this.planet.heightmap.placeOnSurface(this.position.cartesian));
     this.position.setCartesian(this.position.cartesian);
 
