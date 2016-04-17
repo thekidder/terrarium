@@ -35,6 +35,7 @@ class Planet {
       emissive: 0x382E07,
       side: THREE.DoubleSide,
       shading: THREE.FlatShading,
+      vertexColors: THREE.FaceColors,
     });
 
     this.rotation = 0.0;
@@ -90,10 +91,6 @@ class Planet {
     this.t += millis;
   }
 
-  connectedness(node) {
-    return this.navmesh.connectedness(node);
-  }
-
   findPath(start, end) {
     if (!start) {
       start = this.randomFace().faceIndex;
@@ -118,38 +115,6 @@ class Planet {
         return face;
       }
     }
-  }
-
-  inFace(point, faceIndex) {
-    return this.heightmap.inFace(point, this.heightmap.geometry.faces[faceIndex]);
-  }
-
-  findCentroid(from, to) {
-    return this.navmesh.findCentroid(from, to);
-  }
-
-  locateFace(point) {
-    return this.heightmap.locateFace(point);
-  }
-
-  placeOnSurface(cartesianCoords) {
-    return this.heightmap.placeOnSurface(cartesianCoords);
-  }
-
-  toFaceCoords(cartesianCoords) {
-    return this.heightmap.toFaceCoords(cartesianCoords);
-  }
-
-  fromFaceCoords(faceCoords) {
-    return this.heightmap.fromFaceCoords(faceCoords);
-  }
-
-  updateFaceCoords(faceCoords) {
-    return this.heightmap.updateFaceCoords(faceCoords);
-  }
-
-  faceCentroid(faceIndex) {
-    return this.heightmap.faceCentroid(faceIndex);
   }
 }
 
