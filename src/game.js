@@ -29,7 +29,7 @@ class Game {
 
     new THREE.ObjectLoader().load(
       // resource URL
-      'assets/marker1.json',
+      'assets/flower.json',
       // Function when resource is loaded
       function ( object, materials ) {
         const material = new THREE.MeshPhongMaterial({
@@ -38,9 +38,9 @@ class Game {
           side: THREE.DoubleSide,
           shading: THREE.FlatShading,
         });
-        object.traverse(function(o) {
-          o.material = material;
-        });
+        // object.traverse(function(o) {
+        //   o.material = material;
+        // });
 
         this.markerObj = object;
       }.bind(this)
