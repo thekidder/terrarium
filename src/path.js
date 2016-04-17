@@ -19,6 +19,23 @@ const defaultOptions = {
   debug: true,
 };
 
+class DebugShowVelocity {
+  constructor(planet) { this.planet = planet; }
+
+  activate() {
+    this.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0x00ff00);
+    this.planet.sphere.add(this.debugVelocity);
+  }
+
+  deactivate() {
+    this.planet.sphere.remove(this.debugVelocity);
+  }
+
+  draw(position, velocity) {
+    Debug.drawDebugVelocity(this.debugVelocity, position.cartesian, velocity);
+  }
+}
+
 class PathToBehavior {
   constructor(startPos, destPos, planet, options) {
     this.destPos = destPos;
@@ -203,7 +220,9 @@ class AvoidWaterBehavior {
           function(v) { return this.planet.heightmap.geometry.vertices[v].lengthSq(); }.bind(this));
       this.velocity.copy(this.planet.heightmap.geometry.vertices[highestVert]).sub(position.cartesian)
           .normalize()
-          .multiplyScalar((this.planet.size * this.planet.size - position.cartesian.lengthSq()) / (this.planet.size * this.planet.size))
+          .multiplyScalar(
+            (this.planet.size * this.planet.size - position.cartesian.lengthSq()) /
+            (this.planet.size * this.planet.size))
           .multiplyScalar(40);
     } else {
       this.velocity.set(0, 0, 0);
@@ -260,13 +279,73 @@ class ConstrainToRadiusBehavior {
 
     if (this.constraintLine) {
       this.constraintLine.geometry.vertices[0].copy(this.position);
-      this.constraintLine.geometry.vertices[1].copy(position.cartesian).sub(this.position).setLength(this.radius).add(this.position);
+      this.constraintLine.geometry.vertices[1].copy(position.cartesian)
+          .sub(this.position)
+          .setLength(this.radius)
+          .add(this.position);
       this.constraintLine.geometry.verticesNeedUpdate = true;
     }
 
     return this.velocity;
   }
 }
+
+class AttractionBehavior {
+  constructor(position, radius, planet, options) {
+    this.planet = planet;
+    this.position = position.cartesian.clone();
+    this.radius = radius;
+    this.radiusSq = radius * radius;
+    this.options = _.extend({}, defaultOptions, options || {});
+    this.velocity = new THREE.Vector3();
+
+    if (this.options.debug) {
+      this.constraintPoint = Debug.createMarker(new THREE.Vector3(), 0.5,  0xff00ff);
+      this.constraintPoint.position.copy(position.cartesian);
+
+      this.constraintLine = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0xff00ff);
+    }
+  }
+
+  isActive(lastVelocity, position) {
+    const distSq = position.cartesian.distanceToSquared(this.position);
+    return distSq < this.radiusSq;
+  }
+
+  activate() {
+    if (this.options.debug) {
+      this.planet.sphere.add(this.constraintPoint);
+      this.planet.sphere.add(this.constraintLine);
+    }
+  }
+
+  deactivate() {
+    if (this.options.debug) {
+      this.planet.sphere.remove(this.constraintPoint);
+      this.planet.sphere.remove(this.constraintLine);
+    }
+  }
+
+  update(millis, lastVelocity, position) {
+    const dist = position.cartesian.distanceTo(this.position);
+
+    this.velocity.copy(this.position).sub(position.cartesian)
+        .normalize()
+        .multiplyScalar(dist * 0.08);
+
+    if (this.constraintLine) {
+      this.constraintLine.geometry.vertices[0].copy(this.position);
+      this.constraintLine.geometry.vertices[1].copy(position.cartesian)
+          .sub(this.position)
+          .setLength(this.radius)
+          .add(this.position);
+      this.constraintLine.geometry.verticesNeedUpdate = true;
+    }
+
+    return this.velocity;
+  }
+}
+
 
 export class BehaviorList {
   constructor(list, planet) {
@@ -277,9 +356,21 @@ export class BehaviorList {
 
   isActive() { return true; }
 
-  activate() {}
+  activate() {
+    for(const behavior of this.behaviors) {
+      if (behavior.wasActive) {
+        behavior.activate();
+      }
+    }
+  }
 
-  deactivate() {}
+  deactivate() {
+    for(const behavior of this.behaviors) {
+      if (behavior.wasActive) {
+        behavior.deactivate();
+      }
+    }
+  }
 
   update(millis, lastVelocity, position) {
     this.velocity.set(0, 0, 0);
@@ -300,15 +391,6 @@ export class BehaviorList {
       if (isActive) {
         const v = behavior.update(millis, lastVelocity, position);
         this.velocity.add(v);
-
-        if (behavior.options && behavior.options.debug) {
-          if (!behavior.debugVelocity) {
-            behavior.debugVelocity = Debug.createMarkerLine(new THREE.Vector3(), new THREE.Vector3(), 0x00ff00);
-            this.planet.sphere.add(behavior.debugVelocity);
-          }
-
-          Debug.drawDebugVelocity(behavior.debugVelocity, position.cartesian, v);
-        }
       }
 
       behavior.wasActive = isActive;
@@ -343,24 +425,31 @@ class MonumentBehavior {
     this.pathToRadiusSq = this.options.pathToRadius * this.options.pathToRadius;
     this.outerWanderRadiusSq = this.options.outerWanderRadius * this.options.outerWanderRadius;
 
-    this.innerBehavior = new ConstrainToRadiusBehavior(monument.position, this.options.innerWanderRadius, this.planet, this.options);
-    this.pathToBehavior = new PathToBehavior(currentPos, monument.position, this.planet, this.options);
-    this.outerBehavior = new ConstrainToRadiusBehavior(monument.position, this.options.outerWanderRadius, this.planet, this.options);
-
-    this.wander = new WanderBehavior(currentPos, this.planet, this.options);
+    this.innerBehavior = new ConstrainToRadiusBehavior(
+        monument.position, this.options.innerWanderRadius, this.planet, this.options);
+    this.pathToBehavior = new PathToBehavior(
+        currentPos, monument.position, this.planet, this.options);
+    this.outerBehavior = new AttractionBehavior(
+        monument.position, this.options.outerWanderRadius, this.planet, this.options);
+    this.wanderBehavior = new WanderBehavior(
+        currentPos, this.planet, this.options);
 
     this.velocity = new THREE.Vector3();
 
     const sqDist = p => p.cartesian.distanceToSquared(this.monument.position.cartesian);
     const innerActive = (lastVelocity, position) => sqDist(position) < this.innerWanderRadiusSq;
-    const midActive   = (lastVelocity, position) => sqDist(position) >= this.innerWanderRadiusSq && sqDist(position) < this.pathToRadiusSq;
-    const outerActive = (lastVelocity, position) => sqDist(position) >= this.pathToRadiusSq && sqDist(position) < this.outerWanderRadiusSq;
+    const midActive   = (lastVelocity, position) =>
+        sqDist(position) >= this.innerWanderRadiusSq && sqDist(position) < this.pathToRadiusSq;
+    const outerActive = (lastVelocity, position) =>
+        sqDist(position) >= this.pathToRadiusSq && sqDist(position) < this.outerWanderRadiusSq;
+    const wanderActive = (lastVelocity, position) => !midActive(lastVelocity, position);
 
     this.innerBehavior.isActive = innerActive;
     this.pathToBehavior.isActive = midActive;
     this.outerBehavior.isActive = outerActive;
+    this.wanderBehavior.isActive = wanderActive;
 
-    this.behaviors = new BehaviorList([this.innerBehavior, this.pathToBehavior, this.outerBehavior], planet);
+    this.behaviors = new BehaviorList([this.innerBehavior, this.pathToBehavior, this.outerBehavior, this.wanderBehavior], planet);
 
   }
 
@@ -369,9 +458,9 @@ class MonumentBehavior {
     return distSq < this.outerWanderRadiusSq;
   }
 
-  activate() {}
+  activate() { this.behaviors.activate(); }
 
-  deactivate() {}
+  deactivate() {this.behaviors.deactivate(); }
 
   update(millis, lastVelocity, position) {
     return this.behaviors.update(millis, lastVelocity, position);
