@@ -6,6 +6,12 @@ import Heightmap from './heightmap.js';
 import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 
+const Colors = {
+  // TODO: emissive base colors
+  sand: { base: 0xD5C071, emissive: 0x382E07 },
+  grass: { base: 0xA9D194, emissive: 0x1E3B12 },
+};
+
 class Planet {
   constructor(scene, heightmap, size) {
     this.size = size;
@@ -15,24 +21,8 @@ class Planet {
     this.scene = scene;
     this.t = 0;
 
-    // this.material = new THREE.MeshFaceMaterial([
-    //   new THREE.MeshPhongMaterial({
-    //     color: 0xD5C071,
-    //     emissive: 0x382E07,
-    //     side: THREE.DoubleSide,
-    //     shading: THREE.FlatShading,
-    //   }),
-    //   new THREE.MeshPhongMaterial({
-    //     color: 0x44991D,
-    //     emissive: 0x1E430D,
-    //     side: THREE.DoubleSide,
-    //     shading: THREE.FlatShading,
-    //   }),
-    // ]);
-
     this.material = new THREE.MeshPhongMaterial({
-      color: 0xD5C071,
-      emissive: 0x382E07,
+      emissive: 0x363636,
       side: THREE.DoubleSide,
       shading: THREE.FlatShading,
       vertexColors: THREE.FaceColors,
@@ -59,6 +49,18 @@ class Planet {
     });
 
     this.setHeightmap(heightmap);
+
+    this.sphere.geometry.faces.forEach(function(f) {
+      if (Math.random() > 0.5) {
+        f.color.setHex(Colors.sand.base);
+        f.emissive = new THREE.Color(Colors.sand.emissive);
+      } else {
+        f.color.setHex(Colors.grass.base);
+        f.emissive = new THREE.Color(Colors.grass.emissive);
+      }
+    });
+
+    this.sphere.colorsNeedUpdate = true;
   }
 
   setHeightmap(heightmap) {
