@@ -272,18 +272,22 @@ class ConstrainToRadiusBehavior {
   update(millis, lastVelocity, position) {
     const distSq = position.cartesian.distanceToSquared(this.position);
 
-    this.velocity.copy(this.position).sub(position.cartesian)
-        .normalize()
-        .multiplyScalar((distSq - this.radiusSq - this.innerRadiusSq) / this.radiusSq)
-        .multiplyScalar(0.1);
+    if (distSq < this.radiusSq) {
+      this.velocity.set(0, 0, 0);
+    } else {
+      this.velocity.copy(this.position).sub(position.cartesian)
+          .normalize()
+          .multiplyScalar((distSq - this.radiusSq - this.innerRadiusSq) / this.radiusSq)
+          .multiplyScalar(0.1);
 
-    if (this.constraintLine) {
-      this.constraintLine.geometry.vertices[0].copy(this.position);
-      this.constraintLine.geometry.vertices[1].copy(position.cartesian)
-          .sub(this.position)
-          .setLength(this.radius)
-          .add(this.position);
-      this.constraintLine.geometry.verticesNeedUpdate = true;
+      if (this.constraintLine) {
+        this.constraintLine.geometry.vertices[0].copy(this.position);
+        this.constraintLine.geometry.vertices[1].copy(position.cartesian)
+            .sub(this.position)
+            .setLength(this.radius)
+            .add(this.position);
+        this.constraintLine.geometry.verticesNeedUpdate = true;
+      }
     }
 
     return this.velocity;
