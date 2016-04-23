@@ -37,6 +37,7 @@
     "random-seed": "^0.3.0",
     "react": "^0.14.7",
     "react-bootstrap": "^0.28.3",
+    "react-color": "^2.0.0",
     "react-dom": "^0.14.7",
     "simplex-noise": "^2.2.0",
     "stats.js": "^1.0.0",

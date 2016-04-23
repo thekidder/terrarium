@@ -8,6 +8,7 @@ class MovementMonument {
 
     this.position = Position.fromCartesian(position, planet.heightmap);
     this.object = markerObj.clone();
+    this.scale = 0;
 
     this.object.position.copy(position);
     const spin = Math.random() * Math.PI * 2;
@@ -17,6 +18,13 @@ class MovementMonument {
         .multiply(faceDirection);
 
     this.scene.add(this.object);
+  }
+
+  update(millis) {
+    if (this.scale < 1) {
+      this.object.scale.set(this.scale, this.scale, this.scale);
+      this.scale += millis * 0.001 * 0.75;
+    }
   }
 }
 

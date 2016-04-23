@@ -8,6 +8,8 @@ import THREE from 'three';
 
 import { Button, ButtonToolbar, Panel } from 'react-bootstrap';
 
+import ColorPicker from 'react-color';
+
 import App from './app.js';
 import ArcBallCamera from './arc-camera.js';
 import Debug from './debug.js';
@@ -36,6 +38,8 @@ class Editor {
     this.nibbles = [];
 
     Scene.populate(this.scene, {debug: true, scale: size});
+
+    this.editor = document.getElementById('editor-left');
 
     this.renderUI();
 
@@ -67,13 +71,37 @@ class Editor {
       <Panel>
         <h6>Heightmap</h6>
         <p>Seed: {this.seed}</p>
-        <ButtonToolbar>
-          <Button bsSize='xsmall' onClick={this.regenerate.bind(this)}>Regenerate</Button>
-          <Button bsSize='xsmall' onClick={this.save.bind(this)}>Save</Button>
+        <ButtonToolbar pullRight>
+          <Button bsSize='xsmall' className='pull-right' onClick={this.regenerate.bind(this)}>Regenerate</Button>
+          <Button bsSize='xsmall' className='pull-right' onClick={this.save.bind(this)}>Save</Button>
         </ButtonToolbar>
+        <h6>Grass Color</h6>
+        <ColorPicker type='sketch' color={ new THREE.Color(this.planet.colors.grass.base).getHexString() } onChange={ this.grassChange.bind(this) } />
+        <h6>Sand Color</h6>
+        <ColorPicker type='sketch' color={ new THREE.Color(this.planet.colors.sand.base).getHexString () } onChange={ this.sandChange.bind(this) }/>
       </Panel>,
-      document.getElementById('editor-left')
+      this.editor
     );
+  }
+
+  grassChange(color) {
+    this.planet.sphere.geometry.faces.forEach(function(f) {
+      if (f.grass) {
+        f.color.setRGB(color.rgb.r/255, color.rgb.g/255, color.rgb.b/255);
+      }
+    });
+
+    this.planet.sphere.geometry.colorsNeedUpdate = true;
+  }
+
+  sandChange(color) {
+    this.planet.sphere.geometry.faces.forEach(function(f) {
+      if (!f.grass) {
+        f.color.setRGB(color.rgb.r/255, color.rgb.g/255, color.rgb.b/255);
+      }
+    });
+
+    this.planet.sphere.geometry.colorsNeedUpdate = true;
   }
 
   buildHeightmap() {
@@ -117,21 +145,44 @@ class Editor {
   onKeyDown(event) {
   }
 
+  isDescendentFrom(child, parent) {
+    if (child === parent) { return true; }
+    if (child.parentElement === null) { return false; }
+    return this.isDescendentFrom(child.parentElement, parent);
+  }
+
+  isUi(event) {
+    return this.isDescendentFrom(event.target, this.editor);
+  }
 
   onMouseDown(event) {
+    if (this.isUi(event)) {
+      return;
+    }
+
+
     this.drag = true;
+    this.isDrag = false;
     this.camera.startRotate(event.pageX, event.pageY);
   }
 
   onMouseUp(event) {
     this.drag = false;
+    this.isDrag = false;
     this.camera.endRotate();
 
-    this.placeNibble(event);
+    if (!this.isDrag && !this.isUi(event)) {
+      this.placeNibble(event);
+    }
   }
 
   onMouseMove(event) {
+    if (this.isUi(event)) {
+      return;
+    }
+
     if (this.drag) {
+      this.isDrag = true;
       this.camera.rotate(event.pageX, event.pageY);
     }
   }

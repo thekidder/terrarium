@@ -106,6 +106,10 @@ class Game {
     for (const nibble of this.nibbles) {
       nibble.update(millis);
     }
+
+    for (const monument of this.monuments) {
+      monument.update(millis);
+    }
   }
 
   findPath(start, end) {

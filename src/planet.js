@@ -6,14 +6,15 @@ import Heightmap from './heightmap.js';
 import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 
-const Colors = {
-  // TODO: emissive base colors
-  sand: { base: 0xD5C071, emissive: 0x382E07 },
-  grass: { base: 0xA9D194, emissive: 0x1E3B12 },
-};
-
 class Planet {
   constructor(scene, heightmap, size) {
+    this.colors = {
+      // TODO: emissive base colors
+      sand: { base: 0xC3B47B, emissive: 0x382E07 },
+      grass: { base: 0x33C457, emissive: 0x1E3B12 },
+    };
+
+
     this.size = size;
     this.waterHeight = size;
     this.sandThreshold = 0.3;
@@ -52,13 +53,15 @@ class Planet {
 
     this.sphere.geometry.faces.forEach(function(f) {
       if (Math.random() > 0.5) {
-        f.color.setHex(Colors.sand.base);
-        f.emissive = new THREE.Color(Colors.sand.emissive);
+        f.color.setHex(this.colors.sand.base);
+        f.emissive = new THREE.Color(this.colors.sand.emissive);
+        f.grass = false;
       } else {
-        f.color.setHex(Colors.grass.base);
-        f.emissive = new THREE.Color(Colors.grass.emissive);
+        f.color.setHex(this.colors.grass.base);
+        f.emissive = new THREE.Color(this.colors.grass.emissive);
+        f.grass = true;
       }
-    });
+    }.bind(this));
 
     this.sphere.colorsNeedUpdate = true;
   }
