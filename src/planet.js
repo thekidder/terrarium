@@ -10,8 +10,8 @@ class Planet {
   constructor(scene, heightmap, size) {
     this.colors = {
       // TODO: emissive base colors
-      sand: { base: 0xC3B47B, emissive: 0x382E07 },
-      grass: { base: 0x33C457, emissive: 0x1E3B12 },
+      sand: { base: 0xBFAE6D, emissive: 0x382E07 },
+      grass: { base: 0x32B552, emissive: 0x1E3B12 },
     };
 
 
@@ -27,6 +27,7 @@ class Planet {
       side: THREE.DoubleSide,
       shading: THREE.FlatShading,
       vertexColors: THREE.FaceColors,
+      shininess: 20,
     });
 
     this.rotation = 0.0;
@@ -52,18 +53,28 @@ class Planet {
     this.setHeightmap(heightmap);
 
     this.sphere.geometry.faces.forEach(function(f) {
-      if (Math.random() > 0.5) {
-        f.color.setHex(this.colors.sand.base);
-        f.emissive = new THREE.Color(this.colors.sand.emissive);
-        f.grass = false;
-      } else {
-        f.color.setHex(this.colors.grass.base);
-        f.emissive = new THREE.Color(this.colors.grass.emissive);
-        f.grass = true;
-      }
+      // if (Math.random() > 0.5) {
+      f.color.setHex(this.colors.sand.base);
+      f.emissive = new THREE.Color(this.colors.sand.emissive);
+      f.grass = false;
+      // } else {
+      //   f.color.setHex(this.colors.grass.base);
+      //   f.emissive = new THREE.Color(this.colors.grass.emissive);
+      //   f.grass = true;
+      // }
     }.bind(this));
 
-    this.sphere.colorsNeedUpdate = true;
+    this.sphere.geometry.colorsNeedUpdate = true;
+  }
+
+  makeGrass(face) {
+    if (!face.grass) {
+      console.log(`setting face ${face.faceIndex} to grass`);
+      face.color.setHex(this.colors.grass.base);
+      face.grass = true;
+
+      this.sphere.geometry.colorsNeedUpdate = true;
+    }
   }
 
   setHeightmap(heightmap) {
@@ -86,7 +97,7 @@ class Planet {
       const s = 2.4;
       let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 5000.0);
       noise = noise * 0.5 + 0.5;
-      v.copy(v.original.clone().multiplyScalar(this.waterHeight - noise));
+      v.copy(v.original.clone().multiplyScalar(this.waterHeight));
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 

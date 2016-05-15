@@ -1,8 +1,10 @@
 import _ from 'underscore';
-import PlanetMath from './planet-math.js';
 import THREE from 'three';
 
 import { PriorityQueue } from 'es-collections';
+
+import Debug from './debug.js';
+import PlanetMath from './planet-math.js';
 
 class Navmesh {
   constructor(geometry, size) {
@@ -75,6 +77,25 @@ class Navmesh {
     return _.findWhere(this.nodes.get(from).neighbors, {index: to}).sharedEdge;
   }
 
+  showTraversable() {
+    const markers = [];
+    for(const face of this.geometry.faces) {
+      const points = [this.geometry.vertices[face.a], this.geometry.vertices[face.b], this.geometry.vertices[face.c]];
+      const midpoint = points[0].clone()
+          .add(points[1])
+          .add(points[2])
+          .multiplyScalar(1 / 3);
+      if (this.isTraversable(face.faceIndex)) {
+        face.color.setRGB(0, 1, 0);
+      } else {
+        face.color.setRGB(1, 0, 0);
+      }
+      markers.push(Debug.createMarker(midpoint, 0.6, 0x777777));
+    }
+    this.geometry.colorsNeedUpdate = true;
+
+    return markers;
+  }
 
   isTraversable(nodeIndex) {
     const face = this.geometry.faces[nodeIndex];
@@ -86,7 +107,14 @@ class Navmesh {
         }.bind(this),
         0);
 
-    return verticesAboveWater >= 2;
+    const avgHeight = _.reduce(
+        testVertices,
+        function(memo, v) {
+          return memo + this.geometry.vertices[v].length() / testVertices.length;
+        }.bind(this),
+        0);
+
+    return avgHeight > this.size;
   }
 
   buildNeighbors(nodeIndex) {

@@ -71,7 +71,10 @@ class Editor {
       <Panel>
         <h6>Heightmap</h6>
         <p>Seed: {this.seed}</p>
-        <ButtonToolbar pullRight>
+        <ButtonToolbar>
+          <Button bsSize='xsmall' className='pull-right' onClick={this.showTraversable.bind(this)}>Show navigable nodes</Button>
+        </ButtonToolbar>
+        <ButtonToolbar>
           <Button bsSize='xsmall' className='pull-right' onClick={this.regenerate.bind(this)}>Regenerate</Button>
           <Button bsSize='xsmall' className='pull-right' onClick={this.save.bind(this)}>Save</Button>
         </ButtonToolbar>
@@ -82,6 +85,13 @@ class Editor {
       </Panel>,
       this.editor
     );
+  }
+
+  showTraversable() {
+    const markers = this.planet.navmesh.showTraversable();
+    for (const marker of markers) {
+      this.planet.sphere.add(marker);
+    }
   }
 
   grassChange(color) {
@@ -168,12 +178,13 @@ class Editor {
 
   onMouseUp(event) {
     this.drag = false;
-    this.isDrag = false;
     this.camera.endRotate();
 
     if (!this.isDrag && !this.isUi(event)) {
       this.placeNibble(event);
     }
+
+    this.isDrag = false;
   }
 
   onMouseMove(event) {

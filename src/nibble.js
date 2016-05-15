@@ -1,6 +1,8 @@
 import THREE from 'three';
 
 import Debug from './debug.js';
+import Scheduler from './scheduler.js';
+
 import { BehaviorList } from './path.js';
 import { Position } from './position.js';
 
@@ -11,6 +13,8 @@ class Nibble {
     this.marker = Debug.createMarker(new THREE.Vector3(), 0.8, 0xffffff);
     this.marker.position.copy(position);
     this.options = { debug: true };
+
+    this.makeGrassScheduler = new Scheduler(this.makeGrass.bind(this), 500);
 
     this.planet.sphere.add(this.marker);
 
@@ -38,6 +42,11 @@ class Nibble {
 
   update(millis) {
     this.move(millis);
+    this.makeGrassScheduler.update(millis);
+  }
+
+  makeGrass() {
+    this.planet.makeGrass(this.position.face.face);
   }
 
   monument(monument) {
