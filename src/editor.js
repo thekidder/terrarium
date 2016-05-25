@@ -34,6 +34,7 @@ class Editor {
     this.raycaster = new THREE.Raycaster();
     this.raycaster.near = size / 3;
     this.raycaster.far = size * 3;
+    this.mixer = null;
 
     this.nibbles = [];
 
@@ -46,7 +47,7 @@ class Editor {
     // load a resource
     new THREE.ObjectLoader().load(
       // resource URL
-      'assets/marker1.json',
+      'assets/rotation.json',
       // Function when resource is loaded
       function ( object, materials ) {
         const material = new THREE.MeshPhongMaterial({
@@ -61,7 +62,12 @@ class Editor {
           o.material = material;
         });
 
+        const animation = object.animations[0];
+        this.mixer = new THREE.AnimationMixer(object);
+
         this.scene.add( object );
+
+        this.mixer.clipAction(animation).play();
       }.bind(this)
     );
   }
@@ -140,6 +146,10 @@ class Editor {
 
   update(millis) {
     this.planet.update(millis);
+
+    if (this.mixer) {
+      this.mixer.update(millis * 0.001);
+    }
   }
 
   onResize(width, height) {
