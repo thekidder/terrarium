@@ -45,12 +45,16 @@ class Game {
         this.markerObj = object;
       }.bind(this)
     );
+
+    this.sun = new THREE.DirectionalLight(0xffffff, 0.9);
+    this.scene.add(this.sun);
+    this.ambient = new THREE.AmbientLight(0x000000);
+    this.scene.add(this.ambient);
   }
 
   planetLoaded(data) {
     data = JSON.parse(data);
     console.log('loaded planet data...');
-    Scene.populate(this.scene, {scale: data.size});
     this.planet = new Planet(this.scene, Heightmap.load(data.heightmap), data.size);
     this.size = data.size;
     console.log('created planet...');
@@ -74,7 +78,13 @@ class Game {
       this.nibbles.push(nibble);
     }
 
-    this.lookAtNibbles();
+    //this.lookAtNibbles();
+
+    this.cameraPos = new THREE.Vector3(this.size * 3, 0, 0);
+    this.cameraRotationVector = new THREE.Vector3(0, 0, 1);
+
+    Scene.populate(this.planet.sphere, this.camera, {scale: data.size});
+
   }
 
   lookAtNibbles() {
@@ -86,7 +96,10 @@ class Game {
     avgPos.multiplyScalar(this.nibbles.length);
 
     const pos = avgPos.normalize().multiplyScalar(this.size * 2.2);
+    this.moveCameraTo(pos);
+  }
 
+  moveCameraTo(pos) {
     this.camera.position.copy(pos);
     this.camera.up = new THREE.Vector3(0,0,1);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -110,6 +123,11 @@ class Game {
     for (const monument of this.monuments) {
       monument.update(millis);
     }
+
+    this.cameraPos.applyAxisAngle(this.cameraRotationVector, millis * 0.00004);
+    this.moveCameraTo(this.cameraPos);
+    this.sun.position.copy(this.cameraPos);
+    this.sun.position.normalize();
   }
 
   findPath(start, end) {

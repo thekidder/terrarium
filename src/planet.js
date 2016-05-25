@@ -10,8 +10,8 @@ class Planet {
   constructor(scene, heightmap, size) {
     this.colors = {
       // TODO: emissive base colors
-      sand: { base: 0xBFAE6D, emissive: 0x382E07 },
-      grass: { base: 0x32B552, emissive: 0x1E3B12 },
+      sand: { base: 0xBFAE6D, emissive: 0x000000 },
+      grass: { base: 0x32B552, emissive: 0x000000 },
     };
 
 
@@ -23,7 +23,7 @@ class Planet {
     this.t = 0;
 
     this.material = new THREE.MeshPhongMaterial({
-      emissive: 0x363636,
+      emissive: 0x000000,
       side: THREE.DoubleSide,
       shading: THREE.FlatShading,
       vertexColors: THREE.FaceColors,
@@ -35,7 +35,7 @@ class Planet {
     const waterGeometry = new THREE.IcosahedronGeometry(1, 3);
     const waterMaterial = new THREE.MeshPhongMaterial({
       color: 0x214EA1,
-      emissive: 0x0E2143,
+      emissive: 0x000000,
       transparent: true,
       opacity: 0.8,
       side: THREE.DoubleSide,
