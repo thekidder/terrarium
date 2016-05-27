@@ -2,6 +2,7 @@ import Random from 'random-seed';
 import Simplex from 'simplex-noise';
 import THREE from 'three';
 
+import ArcBallCamera from './arc-camera.js';
 import Debug from './debug.js';
 import Heightmap from './heightmap.js';
 import MovementMonument from './monuments.js';
@@ -11,11 +12,14 @@ import Planet from './planet.js';
 import PlanetMath from './planet-math.js';
 import Scene from './scene.js';
 
+
 class Game {
   constructor() {
     this.scene = new THREE.Scene();
     // aspect will get set in onResize
-    this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 );
+    //this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 );
+    this.camera = new ArcBallCamera(80, new THREE.Vector3());
+    this.camera.lookAt(new THREE.Vector3());
 
     const loader = new THREE.XHRLoader();
 
@@ -80,8 +84,8 @@ class Game {
 
     //this.lookAtNibbles();
 
-    this.cameraPos = new THREE.Vector3(this.size * 3, 0, 0);
-    this.cameraRotationVector = new THREE.Vector3(0, 0, 1);
+    this.sunPos = new THREE.Vector3(1, 0, 0);
+    this.sunRotationVector = new THREE.Vector3(0, 0, 1);
 
     Scene.populate(this.planet.sphere, this.camera, {scale: data.size});
 
@@ -124,9 +128,9 @@ class Game {
       monument.update(millis);
     }
 
-    this.cameraPos.applyAxisAngle(this.cameraRotationVector, millis * 0.00004);
-    this.moveCameraTo(this.cameraPos);
-    this.sun.position.copy(this.cameraPos);
+    this.sunPos.applyAxisAngle(this.sunRotationVector, millis * 0.0001);
+    // this.moveCameraTo(this.cameraPos);
+    this.sun.position.copy(this.sunPos);
     this.sun.position.normalize();
   }
 
@@ -166,8 +170,10 @@ class Game {
   }
 
   onResize(width, height) {
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+    this.camera.onResize(width, height);
+
+    // this.camera.aspect = width / height;
+    // this.camera.updateProjectionMatrix();
   }
 
   onFocus(event) {
@@ -180,16 +186,29 @@ class Game {
   }
 
   onMouseDown(event) {
-    this.mouseEvent.x = event.clientX / window.innerWidth * 2 - 1;
-    this.mouseEvent.y = -event.clientY / window.innerHeight * 2 + 1;
-
-    this.placeMonument(this.mouseEvent);
+    this.drag = true;
+    this.isDrag = false;
+    this.camera.startRotate(event.pageX, event.pageY);
   }
 
   onMouseUp(event) {
+    if (!this.isDrag) {
+      this.mouseEvent.x = event.clientX / window.innerWidth * 2 - 1;
+      this.mouseEvent.y = -event.clientY / window.innerHeight * 2 + 1;
+
+      this.placeMonument(this.mouseEvent);
+    }
+
+    this.drag = false;
+    this.camera.endRotate();
+    this.isDrag = false;
   }
 
   onMouseMove(event) {
+    if (this.drag) {
+      this.isDrag = true;
+      this.camera.rotate(event.pageX, event.pageY);
+    }
   }
 
   placeMonument(mousePos) {
