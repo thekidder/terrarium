@@ -30,6 +30,7 @@ class App {
   setEventListeners() {
     document.onkeydown   = this.game.onKeyDown.bind(this.game);
     document.onmousedown = this.game.onMouseDown.bind(this.game);
+    document.onmouseover = this.game.onMouseOver.bind(this.game);
     document.onmouseup   = this.game.onMouseUp.bind(this.game);
     document.onmousemove = this.game.onMouseMove.bind(this.game);
 

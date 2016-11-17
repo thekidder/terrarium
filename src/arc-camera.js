@@ -48,16 +48,9 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
   endRotate() {
   }
 
-  rotate(x, y) {
-    this.arcBallVectorPrevious.copy(this.arcBallVectorCurrent);
-    this.arcBallVectorCurrent.copy(this.getArcballVector(x, y));
-
-    this.moveDirection.set(
-        this.arcBallVectorCurrent.x - this.arcBallVectorPrevious.x,
-        this.arcBallVectorCurrent.y - this.arcBallVectorPrevious.y,
-        0.0);
+  rotateBy(direction) {
+    this.moveDirection.copy(direction);
     this.moveAngle = this.moveDirection.length();
-
     if (this.moveAngle) {
       this.eye.subVectors(this.position, this.center).normalize();
 
@@ -66,9 +59,9 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
       this.objectSidewaysDirection.crossVectors(this.objectUpDirection, this.eyeDirection)
           .normalize();
       this.objectUpDirection.setLength(
-          this.arcBallVectorCurrent.y - this.arcBallVectorPrevious.y);
+          this.moveDirection.y);
       this.objectSidewaysDirection.setLength(
-          this.arcBallVectorCurrent.x - this.arcBallVectorPrevious.x);
+          this.moveDirection.x);
       this.moveDirection.copy(this.objectUpDirection.add(this.objectSidewaysDirection));
       this.axis.crossVectors(this.moveDirection, this.eye).normalize();
 
@@ -82,14 +75,27 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
       this.position.multiplyScalar(this.radius);
     }
 
-    this.arcBallVectorPrevious.copy(this.arcBallVectorCurrent);
     this.lookAt(this.center);
   }
 
+  rotate(x, y) {
+    this.arcBallVectorPrevious.copy(this.arcBallVectorCurrent);
+    this.arcBallVectorCurrent.copy(this.getArcballVector(x, y));
+
+    this.moveDirection.set(
+        this.arcBallVectorCurrent.x - this.arcBallVectorPrevious.x,
+        this.arcBallVectorCurrent.y - this.arcBallVectorPrevious.y,
+        0.0);
+
+    this.rotateBy(this.moveDirection);
+    this.arcBallVectorPrevious.copy(this.arcBallVectorCurrent);
+  }
+
   getArcballVector(x, y) {
-    return new THREE.Vector2(
+    return new THREE.Vector3(
         (x - this.screenWidth * 0.5) / (this.screenWidth * 0.5),
-        (this.screenHeight - 2.0 * y) / this.screenWidth); // screen.width intentional
+        (this.screenHeight - 2.0 * y) / this.screenWidth, // screen.width intentional
+        0.0);
   }
 }
 

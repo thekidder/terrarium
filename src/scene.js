@@ -8,30 +8,27 @@ const defaultOptions = {
   scale: 1,
 };
 
-const Scene = {
-  populate(planet, camera, options) {
+class Sun {
+  constructor(scene, camera, options) {
     options = _.extend({}, defaultOptions, options || {});
 
-    // const l = 5;
+    this.scene = scene;
+    this.speed = (2 * Math.PI) * 0.001 * (1/60);
 
-    // const lights = [
-    //   { intensity: l * 0.8, position: new THREE.Vector3(0, 10, 0).multiplyScalar(options.scale), debugColor: 0xff0000 },
-    //   { intensity: l * 0.5, position: new THREE.Vector3(3, 3, 3).multiplyScalar(options.scale), debugColor: 0x00ff00 },
-    //   { intensity: l * 0.8, position: new THREE.Vector3(-3, -3, -3).multiplyScalar(options.scale), debugColor: 0x0000ff },
-    // ];
+    this.sun = new THREE.DirectionalLight(0xF1EEC9, 0.9);
+    this.scene.add(this.sun);
+    this.ambient = new THREE.AmbientLight(0x4D5CA3, 0.12);
+    this.scene.add(this.ambient);
 
-    // for (const lightInfo of lights) {
-    //   scene.add(Debug.createMarker(lightInfo.position, 0.05, lightInfo.debugColor));
-    //   const light = new THREE.PointLight(0xffffff, lightInfo.intensity, 300, 2);
-    //   light.position.copy(lightInfo.position);
-    //   scene.add(light);
-    // }
+    this.position = new THREE.Vector3(1, 0, 0);
+    this.sunRotationVector = new THREE.Vector3(0, 0, 1);
+  }
 
-    // if (options.debug) {
-    //   const axisHelper = new THREE.AxisHelper(2);
-    //   scene.add(axisHelper);
-    // }
-  },
-};
+  update(millis) {
+    this.position.applyAxisAngle(this.sunRotationVector, -millis * this.speed);
+    this.sun.position.copy(this.position);
+    this.sun.position.normalize();
+  }
+}
 
-export default Scene;
+export { Sun };

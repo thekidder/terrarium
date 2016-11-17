@@ -16,7 +16,7 @@ import Debug from './debug.js';
 import Planet from './planet.js';
 import PlanetGenerator from './planet-generator.js';
 import Nibble from './nibble.js';
-import Scene from './scene.js';
+import { Sun } from './scene.js';
 
 const size = 30.0;
 
@@ -38,8 +38,7 @@ class Editor {
 
     this.nibbles = [];
 
-    Scene.populate(this.scene, {debug: true, scale: size});
-
+    this.sun = new Sun(this.scene, this.camera);
     this.editor = document.getElementById('editor-left');
 
     this.renderUI();
@@ -78,16 +77,31 @@ class Editor {
         <h6>Heightmap</h6>
         <p>Seed: {this.seed}</p>
         <ButtonToolbar>
-          <Button bsSize='xsmall' className='pull-right' onClick={this.showTraversable.bind(this)}>Show navigable nodes</Button>
+          <Button
+              bsSize='xsmall'
+              className='pull-right'
+              onClick={this.showTraversable.bind(this)}>
+            Show navigable nodes
+          </Button>
         </ButtonToolbar>
         <ButtonToolbar>
-          <Button bsSize='xsmall' className='pull-right' onClick={this.regenerate.bind(this)}>Regenerate</Button>
-          <Button bsSize='xsmall' className='pull-right' onClick={this.save.bind(this)}>Save</Button>
+          <Button bsSize='xsmall' className='pull-right' onClick={this.regenerate.bind(this)}>
+            Regenerate
+          </Button>
+          <Button bsSize='xsmall' className='pull-right' onClick={this.save.bind(this)}>
+            Save
+          </Button>
         </ButtonToolbar>
         <h6>Grass Color</h6>
-        <ColorPicker type='sketch' color={ new THREE.Color(this.planet.colors.grass.base).getHexString() } onChange={ this.grassChange.bind(this) } />
+        <ColorPicker
+            type='sketch'
+            color={ new THREE.Color(this.planet.colors.grass.base).getHexString() }
+            onChange={ this.grassChange.bind(this) } />
         <h6>Sand Color</h6>
-        <ColorPicker type='sketch' color={ new THREE.Color(this.planet.colors.sand.base).getHexString () } onChange={ this.sandChange.bind(this) }/>
+        <ColorPicker
+            type='sketch'
+            color={ new THREE.Color(this.planet.colors.sand.base).getHexString () }
+            onChange={ this.sandChange.bind(this) }/>
       </Panel>,
       this.editor
     );
@@ -150,6 +164,8 @@ class Editor {
     if (this.mixer) {
       this.mixer.update(millis * 0.001);
     }
+
+    this.sun.update(millis);
   }
 
   onResize(width, height) {

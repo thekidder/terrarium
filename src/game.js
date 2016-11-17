@@ -10,7 +10,7 @@ import Nibble from './nibble.js';
 import { PathFactory } from './path.js';
 import Planet from './planet.js';
 import PlanetMath from './planet-math.js';
-import Scene from './scene.js';
+import { Sun } from './scene.js';
 
 
 class Game {
@@ -49,11 +49,6 @@ class Game {
         this.markerObj = object;
       }.bind(this)
     );
-
-    this.sun = new THREE.DirectionalLight(0xffffff, 0.9);
-    this.scene.add(this.sun);
-    this.ambient = new THREE.AmbientLight(0x000000);
-    this.scene.add(this.ambient);
   }
 
   planetLoaded(data) {
@@ -84,11 +79,7 @@ class Game {
 
     //this.lookAtNibbles();
 
-    this.sunPos = new THREE.Vector3(1, 0, 0);
-    this.sunRotationVector = new THREE.Vector3(0, 0, 1);
-
-    Scene.populate(this.planet.sphere, this.camera, {scale: data.size});
-
+    this.sun = new Sun(this.scene, this.camera);
   }
 
   lookAtNibbles() {
@@ -105,8 +96,9 @@ class Game {
 
   moveCameraTo(pos) {
     this.camera.position.copy(pos);
+    this.camera.position.multiplyScalar(80);
     this.camera.up = new THREE.Vector3(0,0,1);
-    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+    this.camera.rotate(0, 0);
   }
 
   update(millis) {
@@ -128,10 +120,12 @@ class Game {
       monument.update(millis);
     }
 
-    this.sunPos.applyAxisAngle(this.sunRotationVector, millis * 0.0001);
-    // this.moveCameraTo(this.cameraPos);
-    this.sun.position.copy(this.sunPos);
-    this.sun.position.normalize();
+    this.sun.update(millis);
+    this.moveCameraTo(this.sun.position);
+    const scale = 1;
+    const arcball = this.camera.getArcballVector(this.cameraXOffset, this.cameraYOffset);
+    arcball.multiplyScalar(-0.8);
+    this.camera.rotateBy(arcball);
   }
 
   findPath(start, end) {
@@ -171,9 +165,6 @@ class Game {
 
   onResize(width, height) {
     this.camera.onResize(width, height);
-
-    // this.camera.aspect = width / height;
-    // this.camera.updateProjectionMatrix();
   }
 
   onFocus(event) {
@@ -185,10 +176,11 @@ class Game {
   onKeyDown(event) {
   }
 
+  onMouseOver(event) {
+
+  }
+
   onMouseDown(event) {
-    this.drag = true;
-    this.isDrag = false;
-    this.camera.startRotate(event.pageX, event.pageY);
   }
 
   onMouseUp(event) {
@@ -198,17 +190,11 @@ class Game {
 
       this.placeMonument(this.mouseEvent);
     }
-
-    this.drag = false;
-    this.camera.endRotate();
-    this.isDrag = false;
   }
 
   onMouseMove(event) {
-    if (this.drag) {
-      this.isDrag = true;
-      this.camera.rotate(event.pageX, event.pageY);
-    }
+    this.cameraXOffset = event.clientX;
+    this.cameraYOffset = event.clientY;
   }
 
   placeMonument(mousePos) {
