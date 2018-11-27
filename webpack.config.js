@@ -18,17 +18,17 @@ module.exports = {
     filename: '[name].bundle.js'
   },
   resolve: {
-    modulesDirectories: ['node_modules', bootstrapPath],
+    modules: ['node_modules', bootstrapPath],
   },
   module: {
-    loaders: [
-      { test: /\.js$/, loader: 'babel', query: { presets: ['es2015', 'react'] }, exclude: /node_modules/ },
+    rules: [
+      { test: /\.js$/, loader: 'babel-loader', query: { presets: ['@babel/env', '@babel/preset-react'] }, exclude: /node_modules/ },
       { test: /\.js$/, loader: 'eslint-loader', exclude: /node_modules/ },
       { test: /\.css$/, loader: 'style-loader!css-loader' },
-      { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, loader: "file" },
-      { test: /\.(woff|woff2)$/, loader:"url?prefix=font/&limit=5000" },
-      { test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&mimetype=application/octet-stream" },
-      { test: /\.svg(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&mimetype=image/svg+xml" },
+      { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, loader: "file-loader" },
+      { test: /\.(woff|woff2)$/, loader:"url-loader?prefix=font/&limit=5000" },
+      { test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/, loader: "url-loader?limit=10000&mimetype=application/octet-stream" },
+      { test: /\.svg(\?v=\d+\.\d+\.\d+)?$/, loader: "url-loader?limit=10000&mimetype=image/svg+xml" },
     ]
   },
   plugins: [

@@ -1,4 +1,4 @@
-import THREE from 'three';
+import * as THREE from 'three';
 
 const Debug = {
   createMarker: function(position, size, color) {

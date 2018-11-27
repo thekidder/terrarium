@@ -1,4 +1,4 @@
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Position } from './position.js';
 
@@ -14,8 +14,8 @@ class MovementMonument {
     const spin = Math.random() * Math.PI * 2;
     const faceDirection = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), faceNormal);
     this.object.quaternion
-        .setFromAxisAngle(faceNormal, spin)
-        .multiply(faceDirection);
+      .setFromAxisAngle(faceNormal, spin)
+      .multiply(faceDirection);
 
     this.scene.add(this.object);
   }

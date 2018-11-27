@@ -2,7 +2,7 @@ import _ from 'underscore';
 
 import { FacePosition } from './position.js';
 import PlanetMath from './planet-math.js';
-import THREE from 'three';
+import * as THREE from 'three';
 
 class Heightmap {
   constructor(geometry) {
@@ -83,7 +83,7 @@ class Heightmap {
 
       f.toFaceVector = new THREE.Matrix4().getInverse(f.fromFaceBasis);
       f.toFaceBasis = f.toFaceVector.clone()
-          .multiply(translateMatrix);
+        .multiply(translateMatrix);
 
       f.fromFaceBasis = new THREE.Matrix4().makeTranslation(a.x, a.y, a.z).multiply(f.fromFaceBasis);
 
@@ -164,17 +164,17 @@ class Heightmap {
       this.geometry.vertices[face.c],
     ];
     return points[0].clone()
-        .add(points[1])
-        .add(points[2])
-        .multiplyScalar(1 / 3);
+      .add(points[1])
+      .add(points[2])
+      .multiplyScalar(1 / 3);
   }
 
   faceCentroid(faceIndex) {
     const points = [...this.geometry.faces[faceIndex].pointsInFaceSpace.values()];
     return points[0].clone()
-        .add(points[1])
-        .add(points[2])
-        .multiplyScalar(1 / 3);
+      .add(points[1])
+      .add(points[2])
+      .multiplyScalar(1 / 3);
   }
 }
 

@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import THREE from 'three';
+import * as THREE from 'three';
 
 import Debug from './debug.js';
 

@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import THREE from 'three';
+import * as THREE from 'three';
 
 const defaultOptions = {
   sensitivity: 1.0,
@@ -57,11 +57,11 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
       this.eyeDirection.copy(this.eye).normalize();
       this.objectUpDirection.copy(this.up).normalize();
       this.objectSidewaysDirection.crossVectors(this.objectUpDirection, this.eyeDirection)
-          .normalize();
+        .normalize();
       this.objectUpDirection.setLength(
-          this.moveDirection.y);
+        this.moveDirection.y);
       this.objectSidewaysDirection.setLength(
-          this.moveDirection.x);
+        this.moveDirection.x);
       this.moveDirection.copy(this.objectUpDirection.add(this.objectSidewaysDirection));
       this.axis.crossVectors(this.moveDirection, this.eye).normalize();
 
@@ -83,9 +83,9 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
     this.arcBallVectorCurrent.copy(this.getArcballVector(x, y));
 
     this.moveDirection.set(
-        this.arcBallVectorCurrent.x - this.arcBallVectorPrevious.x,
-        this.arcBallVectorCurrent.y - this.arcBallVectorPrevious.y,
-        0.0);
+      this.arcBallVectorCurrent.x - this.arcBallVectorPrevious.x,
+      this.arcBallVectorCurrent.y - this.arcBallVectorPrevious.y,
+      0.0);
 
     this.rotateBy(this.moveDirection);
     this.arcBallVectorPrevious.copy(this.arcBallVectorCurrent);
@@ -93,9 +93,9 @@ class ArcBallCamera extends THREE.PerspectiveCamera {
 
   getArcballVector(x, y) {
     return new THREE.Vector3(
-        (x - this.screenWidth * 0.5) / (this.screenWidth * 0.5),
-        (this.screenHeight - 2.0 * y) / this.screenWidth, // screen.width intentional
-        0.0);
+      (x - this.screenWidth * 0.5) / (this.screenWidth * 0.5),
+      (this.screenHeight - 2.0 * y) / this.screenWidth, // screen.width intentional
+      0.0);
   }
 }
 

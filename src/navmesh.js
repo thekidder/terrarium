@@ -1,5 +1,4 @@
 import _ from 'underscore';
-import THREE from 'three';
 
 import { PriorityQueue } from 'es-collections';
 
@@ -82,9 +81,9 @@ class Navmesh {
     for(const face of this.geometry.faces) {
       const points = [this.geometry.vertices[face.a], this.geometry.vertices[face.b], this.geometry.vertices[face.c]];
       const midpoint = points[0].clone()
-          .add(points[1])
-          .add(points[2])
-          .multiplyScalar(1 / 3);
+        .add(points[1])
+        .add(points[2])
+        .multiplyScalar(1 / 3);
       if (this.isTraversable(face.faceIndex)) {
         face.color.setRGB(0, 1, 0);
       } else {
@@ -101,18 +100,18 @@ class Navmesh {
     const face = this.geometry.faces[nodeIndex];
     const testVertices = [face.a, face.b, face.c];
     const verticesAboveWater = _.reduce(
-        testVertices,
-        function(memo, v) {
-          return memo + (this.geometry.vertices[v].lengthSq() > (this.size * this.size) ? 1 : 0);
-        }.bind(this),
-        0);
+      testVertices,
+      function(memo, v) {
+        return memo + (this.geometry.vertices[v].lengthSq() > (this.size * this.size) ? 1 : 0);
+      }.bind(this),
+      0);
 
     const avgHeight = _.reduce(
-        testVertices,
-        function(memo, v) {
-          return memo + this.geometry.vertices[v].length() / testVertices.length;
-        }.bind(this),
-        0);
+      testVertices,
+      function(memo, v) {
+        return memo + this.geometry.vertices[v].length() / testVertices.length;
+      }.bind(this),
+      0);
 
     return avgHeight > this.size;
   }
@@ -141,7 +140,7 @@ class Navmesh {
 
       if (testNode.sharedVertices.length == 2) {
         centroid.add(this.geometry.vertices[testNode.sharedVertices[1]])
-            .multiplyScalar(0.5);
+          .multiplyScalar(0.5);
       }
 
       node.neighbors.push({index: testNode.index, centroid: centroid});

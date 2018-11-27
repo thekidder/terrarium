@@ -1,10 +1,10 @@
-const FileSaver = require('filesaver.js');
+import saveAs from 'file-saver';
 
 require('bootstrap.min.css');
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Button, ButtonToolbar, Panel } from 'react-bootstrap';
 
@@ -78,9 +78,9 @@ class Editor {
         <p>Seed: {this.seed}</p>
         <ButtonToolbar>
           <Button
-              bsSize='xsmall'
-              className='pull-right'
-              onClick={this.showTraversable.bind(this)}>
+            bsSize='xsmall'
+            className='pull-right'
+            onClick={this.showTraversable.bind(this)}>
             Show navigable nodes
           </Button>
         </ButtonToolbar>
@@ -94,14 +94,14 @@ class Editor {
         </ButtonToolbar>
         <h6>Grass Color</h6>
         <ColorPicker
-            type='sketch'
-            color={ new THREE.Color(this.planet.colors.grass.base).getHexString() }
-            onChange={ this.grassChange.bind(this) } />
+          type='sketch'
+          color={ new THREE.Color(this.planet.colors.grass.base).getHexString() }
+          onChange={ this.grassChange.bind(this) } />
         <h6>Sand Color</h6>
         <ColorPicker
-            type='sketch'
-            color={ new THREE.Color(this.planet.colors.sand.base).getHexString () }
-            onChange={ this.sandChange.bind(this) }/>
+          type='sketch'
+          color={ new THREE.Color(this.planet.colors.sand.base).getHexString () }
+          onChange={ this.sandChange.bind(this) }/>
       </Panel>,
       this.editor
     );
@@ -155,7 +155,7 @@ class Editor {
     const wrappedData = `${JSON.stringify(data)}\n`;
 
     const blob = new Blob([wrappedData], {type : 'application/json'});
-    FileSaver.saveAs(blob, 'planet-data.json');
+    saveAs(blob, 'planet-data.json');
   }
 
   update(millis) {
@@ -222,6 +222,9 @@ class Editor {
       this.isDrag = true;
       this.camera.rotate(event.pageX, event.pageY);
     }
+  }
+
+  onMouseOver(event) {
   }
 
   placeNibble(event) {

@@ -1,7 +1,7 @@
 const PlanetMath = {
   cartesianToSpherical: function(cartesian) {
     const r = Math.sqrt(
-        cartesian.x * cartesian.x +
+      cartesian.x * cartesian.x +
         cartesian.y * cartesian.y +
         cartesian.z * cartesian.z);
     return {

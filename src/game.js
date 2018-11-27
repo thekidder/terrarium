@@ -1,6 +1,6 @@
 import Random from 'random-seed';
 import Simplex from 'simplex-noise';
-import THREE from 'three';
+import * as THREE from 'three';
 
 import ArcBallCamera from './arc-camera.js';
 import Debug from './debug.js';
@@ -158,9 +158,9 @@ class Game {
   faceCenter(faceIndex) {
     const face = this.planet.heightmap.geometry.faces[faceIndex];
     return this.planet.heightmap.geometry.vertices[face.a].clone()
-        .add(this.planet.heightmap.geometry.vertices[face.b])
-        .add(this.planet.heightmap.geometry.vertices[face.c])
-        .multiplyScalar(1 / 3);
+      .add(this.planet.heightmap.geometry.vertices[face.b])
+      .add(this.planet.heightmap.geometry.vertices[face.c])
+      .multiplyScalar(1 / 3);
   }
 
   onResize(width, height) {
@@ -177,7 +177,6 @@ class Game {
   }
 
   onMouseOver(event) {
-
   }
 
   onMouseDown(event) {

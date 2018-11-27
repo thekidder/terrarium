@@ -1,4 +1,4 @@
-import THREE from 'three';
+import * as THREE from 'three';
 
 import Debug from './debug.js';
 import Scheduler from './scheduler.js';
