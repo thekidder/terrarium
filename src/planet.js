@@ -6,8 +6,11 @@ import Heightmap from './heightmap.js';
 import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 
+import skyVertexShader from './sky-vertex.glsl';
+import skyFragmentShader from './sky-fragment.glsl';
+
 class Planet {
-  constructor(scene, heightmap, size) {
+  constructor(scene, sun, heightmap, size) {
     this.colors = {
       // TODO: emissive base colors
       sand: { base: 0xBFAE6D, emissive: 0x000000 },
@@ -16,7 +19,8 @@ class Planet {
 
 
     this.size = size;
-    this.waterHeight = size;
+    this.waterSize = size;
+    this.atmosphereSize = size * 1.25;
     this.sandThreshold = 0.3;
 
     this.scene = scene;
@@ -25,7 +29,7 @@ class Planet {
     this.material = new THREE.MeshPhongMaterial({
       emissive: 0x000000,
       side: THREE.DoubleSide,
-      shading: THREE.FlatShading,
+      flatShading: true,
       vertexColors: THREE.FaceColors,
       shininess: 20,
     });
@@ -39,7 +43,7 @@ class Planet {
       transparent: true,
       opacity: 0.8,
       side: THREE.DoubleSide,
-      shading: THREE.FlatShading,
+      flatShading: true,
     });
     this.waterSimplex = new Simplex(Math.random);
     this.waterSphere = new THREE.Mesh(waterGeometry, waterMaterial);
@@ -49,6 +53,21 @@ class Planet {
     this.waterSphere.geometry.vertices.forEach(function(v) {
       v.original = v.clone();
     });
+
+    const skyMaterial = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      vertexShader: skyVertexShader,
+      fragmentShader: skyFragmentShader,
+      uniforms: {
+        sunDir: { value: sun.position },
+        planetPos: { value: new THREE.Vector3(0, 0, 0) },
+        atmosphereSize: { value: this.atmosphereSize },
+      },
+    });
+    const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize, 4);
+    this.skySphere = new THREE.Mesh(skyGeometry, skyMaterial);
+    this.skySphere.name = "sky";
+    this.scene.add(this.skySphere);
 
     this.setHeightmap(heightmap);
 
@@ -97,7 +116,7 @@ class Planet {
       const s = 2.4;
       let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 5000.0);
       noise = noise * 0.5 + 0.5;
-      v.copy(v.original.clone().multiplyScalar(this.waterHeight));
+      v.copy(v.original.clone().multiplyScalar(this.waterSize));
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 

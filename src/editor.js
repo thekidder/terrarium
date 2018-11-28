@@ -53,7 +53,7 @@ class Editor {
           color: 0x555555,
           emissive: 0x333333,
           side: THREE.DoubleSide,
-          shading: THREE.FlatShading,
+          flatShading: true,
         });
         // const object = new THREE.Mesh( geometry, material );
         object.position.set(0, size, 0);

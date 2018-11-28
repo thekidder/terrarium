@@ -21,7 +21,9 @@ class Game {
     this.camera = new ArcBallCamera(80, new THREE.Vector3());
     this.camera.lookAt(new THREE.Vector3());
 
-    const loader = new THREE.XHRLoader();
+    this.sun = new Sun(this.scene, this.camera);
+
+    const loader = new THREE.FileLoader();
 
     console.log('loading planet data...');
     loader.load('/assets/planet-data.json', this.planetLoaded.bind(this));
@@ -40,7 +42,7 @@ class Game {
           color: 0x555555,
           emissive: 0x333333,
           side: THREE.DoubleSide,
-          shading: THREE.FlatShading,
+          flatShading: true,
         });
         // object.traverse(function(o) {
         //   o.material = material;
@@ -54,7 +56,7 @@ class Game {
   planetLoaded(data) {
     data = JSON.parse(data);
     console.log('loaded planet data...');
-    this.planet = new Planet(this.scene, Heightmap.load(data.heightmap), data.size);
+    this.planet = new Planet(this.scene, this.sun, Heightmap.load(data.heightmap), data.size);
     this.size = data.size;
     console.log('created planet...');
 
@@ -78,8 +80,6 @@ class Game {
     }
 
     //this.lookAtNibbles();
-
-    this.sun = new Sun(this.scene, this.camera);
   }
 
   lookAtNibbles() {
