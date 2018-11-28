@@ -48,7 +48,7 @@ class Planet {
     this.waterSimplex = new Simplex(Math.random);
     this.waterSphere = new THREE.Mesh(waterGeometry, waterMaterial);
     this.waterSphere.name = "water";
-    this.scene.add(this.waterSphere);
+    // this.scene.add(this.waterSphere);
 
     this.waterSphere.geometry.vertices.forEach(function(v) {
       v.original = v.clone();
@@ -108,7 +108,7 @@ class Planet {
     this.navmesh = new Navmesh(this.heightmap.geometry, this.size);
     this.navmesh.build();
 
-    this.scene.add(this.sphere);
+    // this.scene.add(this.sphere);
   }
 
   update(millis) {
