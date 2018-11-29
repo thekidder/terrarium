@@ -17,11 +17,16 @@ class Planet {
       grass: { base: 0x32B552, emissive: 0x000000 },
     };
 
-
+    this.sun = sun;
     this.size = size;
     this.waterSize = size;
-    this.atmosphereSize = size * 1.25;
+    this.atmosphereSize = size * 1.75;
     this.sandThreshold = 0.3;
+
+    this.scaleFactor = 1e5;
+    this.scaleHeight = 1.9;
+    this.rayScaleHeight = 1.1;
+    this.sunIntensity = 15;
 
     this.scene = scene;
     this.t = 0;
@@ -48,24 +53,45 @@ class Planet {
     this.waterSimplex = new Simplex(Math.random);
     this.waterSphere = new THREE.Mesh(waterGeometry, waterMaterial);
     this.waterSphere.name = "water";
-    // this.scene.add(this.waterSphere);
+    this.scene.add(this.waterSphere);
 
     this.waterSphere.geometry.vertices.forEach(function(v) {
       v.original = v.clone();
     });
 
-    const skyMaterial = new THREE.ShaderMaterial({
+    function scatteringForWavelength(wavelength) {
+      const refractiveIndex = 1.00029;
+      const molecularDensity = 2.504e25;
+      return ((8.0 * Math.pow(Math.PI, 3) * Math.pow(refractiveIndex * refractiveIndex - 1, 2)) / 3) *
+          (1.0 / molecularDensity) *
+          (1 / Math.pow(wavelength, 4));
+    }
+
+    const scatteringCoefficient = new THREE.Vector3(
+      scatteringForWavelength(680e-9) * this.scaleFactor,
+      scatteringForWavelength(550e-9) * this.scaleFactor,
+      scatteringForWavelength(440e-9) * this.scaleFactor,
+    );
+
+    console.log(`scattering coefficient: ${JSON.stringify(scatteringCoefficient)}`);
+
+    this.skyMaterial = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       vertexShader: skyVertexShader,
       fragmentShader: skyFragmentShader,
       uniforms: {
-        sunDir: { value: sun.position },
+        sunDir: { value: this.sun.position.clone() },
         planetPos: { value: new THREE.Vector3(0, 0, 0) },
+        planetRadius: { value: this.waterSize * 0.9 },
         atmosphereSize: { value: this.atmosphereSize },
+        scatteringCoefficient: { value: scatteringCoefficient },
+        sunIntensity: { value: new THREE.Vector3(this.sunIntensity, this.sunIntensity, this.sunIntensity) },
+        scaleHeight: { value:this.scaleHeight },
+        rayScaleHeight: { value: this.rayScaleHeight },
       },
     });
-    const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize, 4);
-    this.skySphere = new THREE.Mesh(skyGeometry, skyMaterial);
+    const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize, 5);
+    this.skySphere = new THREE.Mesh(skyGeometry, this.skyMaterial);
     this.skySphere.name = "sky";
     this.scene.add(this.skySphere);
 
@@ -108,7 +134,7 @@ class Planet {
     this.navmesh = new Navmesh(this.heightmap.geometry, this.size);
     this.navmesh.build();
 
-    // this.scene.add(this.sphere);
+    this.scene.add(this.sphere);
   }
 
   update(millis) {
@@ -124,6 +150,8 @@ class Planet {
     this.sphere.rotation.y = this.rotation;
     this.waterSphere.rotation.y = this.rotation;
     this.t += millis;
+
+    this.skyMaterial.uniforms.sunDir.value = this.sun.position.clone();
   }
 
   findPath(start, end) {

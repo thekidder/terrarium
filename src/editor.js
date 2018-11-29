@@ -6,7 +6,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 
-import { Button, ButtonToolbar, Panel } from 'react-bootstrap';
+import { Button, ButtonToolbar, Form, FormControl, Panel } from 'react-bootstrap';
 
 import ColorPicker from 'react-color';
 
@@ -18,18 +18,19 @@ import PlanetGenerator from './planet-generator.js';
 import Nibble from './nibble.js';
 import { Sun } from './scene.js';
 
-const size = 30.0;
+const size = 6.371;
 
 class Editor {
   constructor() {
     this.scene = new THREE.Scene();
-    this.camera = new ArcBallCamera(size * 2.2, new THREE.Vector3());
+    this.camera = new ArcBallCamera(size * 3.3, new THREE.Vector3());
     this.drag = false;
 
     this.camera.lookAt(new THREE.Vector3());
 
     this.seed = 8711939729391615;
-    this.planet = new Planet(this.scene, this.buildHeightmap(), size);
+    this.sun = new Sun(this.scene, this.camera, size);
+    this.planet = new Planet(this.scene, this.sun, this.buildHeightmap(), size);
     this.mouse = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
     this.raycaster.near = size / 3;
@@ -38,8 +39,13 @@ class Editor {
 
     this.nibbles = [];
 
-    this.sun = new Sun(this.scene, this.camera);
     this.editor = document.getElementById('editor-left');
+
+    this.state = {
+      scaleHeight: this.planet.scaleHeight,
+      rayScaleHeight: this.planet.rayScaleHeight,
+      sunIntensity: this.planet.sunIntensity,
+    };
 
     this.renderUI();
 
@@ -92,6 +98,28 @@ class Editor {
             Save
           </Button>
         </ButtonToolbar>
+        <Form inline>
+          <FormControl
+            type='text'
+            value={this.state.scaleHeight}
+            style={{ width:'100px' }}
+            placeholder='scaleHeight'
+            onChange={this.scaleHeightChange.bind(this)}
+          />
+          <FormControl
+            type='text'
+            value={this.state.rayScaleHeight}
+            style={{ width: '100px' }}
+            placeholder='rayScaleHeight'
+            onChange={this.rayScaleHeightChange.bind(this)}
+          />
+        </Form>
+        <FormControl
+          type='text'
+          value={this.state.sunIntensity}
+          placeholder='sunIntensity'
+          onChange={this.sunIntensityChange.bind(this)}
+        />
         <h6>Grass Color</h6>
         <ColorPicker
           type='sketch'
@@ -144,6 +172,44 @@ class Editor {
     this.renderUI();
   }
 
+  scaleHeightChange(event) {
+    this.state.scaleHeight = event.target.value;
+    const val = parseFloat(event.target.value);
+    if (!isNaN(val)) {
+      console.log(`changing scale height to ${JSON.stringify(val)}`);
+
+      this.planet.scaleHeight = val;
+      this.planet.skyMaterial.uniforms.scaleHeight.value = val;
+
+    }
+    this.renderUI();
+  }
+
+  rayScaleHeightChange(event) {
+    this.state.rayScaleHeight = event.target.value;
+    const val = parseFloat(event.target.value);
+    if (!isNaN(val)) {
+      console.log(`changing ray scale height to ${JSON.stringify(val)}`);
+
+      this.planet.rayScaleHeight = val;
+      this.planet.skyMaterial.uniforms.rayScaleHeight.value = val;
+
+    }
+    this.renderUI();
+  }
+
+  sunIntensityChange(event) {
+    this.state.sunIntensity = event.target.value;
+    const val = parseFloat(event.target.value);
+    if (!isNaN(val)) {
+      console.log(`changing sun intensity height to ${JSON.stringify(val)}`);
+
+      this.planet.sunIntensity = val;
+      this.planet.skyMaterial.uniforms.sunIntensity.value = new THREE.Vector3(val, val, val);
+
+    }
+    this.renderUI();
+  }
   save() {
     const data = {
       seed: this.planet.seed,
@@ -233,12 +299,15 @@ class Editor {
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const intersections = this.raycaster.intersectObject(this.planet.sphere, true);
 
-    const pos = this.raycaster.ray.at(intersections[0].distance);
-    console.log(`adding nibble at ${JSON.stringify(pos)}`);
-    const nibble = new Nibble(this.planet, null, pos);
-    this.nibbles.push(nibble);
+    if (intersections.length > 0) {
 
-    console.log(`intersection: ${intersections[0].faceIndex}`);
+      const pos = this.raycaster.ray.at(intersections[0].distance);
+      console.log(`adding nibble at ${JSON.stringify(pos)}`);
+      const nibble = new Nibble(this.planet, null, pos);
+      this.nibbles.push(nibble);
+
+      console.log(`intersection: ${intersections[0].faceIndex}`);
+    }
   }
 }
 
