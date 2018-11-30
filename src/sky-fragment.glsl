@@ -1,4 +1,3 @@
-uniform float atmosphereSize;
 varying vec3 light;
 
 void main()	{

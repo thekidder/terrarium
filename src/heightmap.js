@@ -15,6 +15,7 @@ class Heightmap {
     this.geometry.computeBoundingBox();
     this.geometry.computeBoundingSphere();
     this.geometry.computeFaceNormals();
+    this.geometry.computeFlatVertexNormals();
   }
 
   static load(heightmap) {
@@ -35,7 +36,10 @@ class Heightmap {
     const geometry = new THREE.IcosahedronGeometry(1, detail);
 
     geometry.vertices.forEach(function(v, i) {
+      // console.log(v.length());
+      // console.log(generationFunc(v));
       v.multiplyScalar(generationFunc(v));
+      // console.log(v.length());
     });
 
     return new Heightmap(geometry);

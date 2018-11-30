@@ -5,7 +5,9 @@ import * as THREE from 'three';
 import Heightmap from './heightmap.js';
 import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
+import { savePng } from './image.js';
 
+import planetVertexShader from './planet-vertex.glsl';
 import skyVertexShader from './sky-vertex.glsl';
 import skyFragmentShader from './sky-fragment.glsl';
 
@@ -31,12 +33,49 @@ class Planet {
     this.scene = scene;
     this.t = 0;
 
-    this.material = new THREE.MeshPhongMaterial({
-      emissive: 0x000000,
-      side: THREE.DoubleSide,
-      flatShading: true,
+    function scatteringForWavelength(wavelength) {
+      const refractiveIndex = 1.00029;
+      const molecularDensity = 2.504e25;
+      return ((8.0 * Math.pow(Math.PI, 3) * Math.pow(refractiveIndex * refractiveIndex - 1, 2)) / 3) *
+        (1.0 / molecularDensity) *
+        (1 / Math.pow(wavelength, 4));
+    }
+
+    const scatteringCoefficient = new THREE.Vector3(
+      scatteringForWavelength(680e-9) * this.scaleFactor,
+      scatteringForWavelength(550e-9) * this.scaleFactor,
+      scatteringForWavelength(440e-9) * this.scaleFactor,
+    );
+
+    console.log(`scattering coefficient: ${JSON.stringify(scatteringCoefficient)}`);
+
+    const heightmapTexture = this.heightmapAsTexture(heightmap);
+
+    // this.material = new THREE.MeshPhongMaterial({
+    //   emissive: 0x000000,
+    //   side: THREE.DoubleSide,
+    //   flatShading: true,
+    //   vertexColors: THREE.FaceColors,
+    //   shininess: 20,
+    // });
+    this.material = new THREE.ShaderMaterial({
+      side: THREE.FrontSide,
+      vertexShader: planetVertexShader,
+      fragmentShader: skyFragmentShader,
       vertexColors: THREE.FaceColors,
-      shininess: 20,
+      uniforms: {
+        sunDir: { value: this.sun.position.clone() },
+        planetPos: { value: new THREE.Vector3(0, 0, 0) },
+        planetRadius: { value: this.waterSize * 0.9 },
+        atmosphereSize: { value: this.atmosphereSize },
+        scatteringCoefficient: { value: scatteringCoefficient },
+        sunIntensity: { value: (new THREE.Vector3(this.sunIntensity, this.sunIntensity, this.sunIntensity)).multiplyScalar(1.5) },
+        scaleHeight: { value: this.scaleHeight },
+        rayScaleHeight: { value: this.rayScaleHeight },
+        heightmap: { value: heightmapTexture },
+        heightmapMin: { value: this.size - 0.5 * 0.25 * this.size },
+        heightmapScale: { value: 255 / (0.25 * this.size) },
+      },
     });
 
     this.rotation = 0.0;
@@ -59,22 +98,6 @@ class Planet {
       v.original = v.clone();
     });
 
-    function scatteringForWavelength(wavelength) {
-      const refractiveIndex = 1.00029;
-      const molecularDensity = 2.504e25;
-      return ((8.0 * Math.pow(Math.PI, 3) * Math.pow(refractiveIndex * refractiveIndex - 1, 2)) / 3) *
-          (1.0 / molecularDensity) *
-          (1 / Math.pow(wavelength, 4));
-    }
-
-    const scatteringCoefficient = new THREE.Vector3(
-      scatteringForWavelength(680e-9) * this.scaleFactor,
-      scatteringForWavelength(550e-9) * this.scaleFactor,
-      scatteringForWavelength(440e-9) * this.scaleFactor,
-    );
-
-    console.log(`scattering coefficient: ${JSON.stringify(scatteringCoefficient)}`);
-
     this.skyMaterial = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       vertexShader: skyVertexShader,
@@ -88,6 +111,9 @@ class Planet {
         sunIntensity: { value: new THREE.Vector3(this.sunIntensity, this.sunIntensity, this.sunIntensity) },
         scaleHeight: { value:this.scaleHeight },
         rayScaleHeight: { value: this.rayScaleHeight },
+        heightmap: { value: heightmapTexture },
+        heightmapMin: { value: this.size - 0.5 * 0.25 * this.size },
+        heightmapScale: { value: 255 / (0.25 * this.size) },
       },
     });
     const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize, 5);
@@ -96,6 +122,7 @@ class Planet {
     this.scene.add(this.skySphere);
 
     this.setHeightmap(heightmap);
+    this.heightmapTexture = heightmapTexture;
 
     this.sphere.geometry.faces.forEach(function(f) {
       // if (Math.random() > 0.5) {
@@ -134,7 +161,68 @@ class Planet {
     this.navmesh = new Navmesh(this.heightmap.geometry, this.size);
     this.navmesh.build();
 
+    // this.saveHeightmap(this.heightmap);
+
     this.scene.add(this.sphere);
+  }
+
+  heightmapAsDataArray(heightmap, width, height) {
+    const data = new Uint8ClampedArray(width * height * 4);
+
+    const scale = 255 / (0.25 * this.size);
+    const min = this.size - 0.5 * 0.25 * this.size;
+
+    console.log(`scale: ${scale} min: ${min}`);
+
+    for (let i = 0; i < width; ++i) {
+      for (let j = 0; j < height; ++j) {
+        const u = i / width;
+        const v = j / height;
+        // console.log(`uv: ${u},${v}`);
+        const x = Math.cos(2 * Math.PI * (u - 0.5));
+        const y = Math.sin(Math.PI * (0.5 - v));
+        const z = Math.sin(2 * Math.PI * (u - 0.5));
+        // console.log(`xyz: ${x},${y},${z}`);
+
+        const original = (new THREE.Vector3(x, y, z)).normalize().multiplyScalar(this.size);
+        const h = heightmap.placeOnSurface(original);
+        // console.log(`original: ${JSON.stringify(original)} h: ${JSON.stringify(h.normalize().multiplyScalar(this.size))}`);
+        // if (h.length() < 5.574625) {
+        //   console.log(h.length());
+        // }
+        // let relativeHeight = 0;
+        // if (h.length() > this.size) {
+        //   relativeHeight = 255;
+        // }
+        let relativeHeight = scale * (h.length() - min);
+        relativeHeight = Math.max(0, Math.min(relativeHeight, 255));
+        // console.log(`rel: ${relativeHeight}`);
+        const index = i + j * width;
+        data[index * 4 + 0] = relativeHeight;
+        data[index * 4 + 1] = relativeHeight;
+        data[index * 4 + 2] = relativeHeight;
+        data[index * 4 + 3] = 255;
+      }
+    }
+    return data;
+  }
+
+  heightmapAsTexture(heightmap) {
+    const width = 256;
+    const height = 256;
+
+    const data = this.heightmapAsDataArray(heightmap, width, height);
+
+    return THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.UnsignedByteType,THREE.UVMapping,
+      THREE.RepeatWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter, 1);
+  }
+
+  saveHeightmap(heightmap) {
+    const width = 128;
+    const height = 128;
+
+    const data = this.heightmapAsDataArray(heightmap, width, height);
+    savePng('heightmap.png', width, height, data);
   }
 
   update(millis) {

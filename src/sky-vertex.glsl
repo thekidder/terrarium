@@ -4,12 +4,13 @@ uniform float atmosphereSize;
 uniform float planetRadius;
 uniform vec3 scatteringCoefficient;
 uniform vec3 sunIntensity;
+uniform sampler2D heightmap;
+uniform float heightmapScale;
+uniform float heightmapMin;
 
 uniform float rayScaleHeight;
 uniform float scaleHeight;
 
-// varying vec3 viewDir;
-// varying float atmosphereThickness;
 varying vec3 light;
 
 bool rayIntersect(
@@ -37,7 +38,7 @@ bool rayIntersect(
   return true;
 }
 
-const int numSunSamples = 10;
+const int numSunSamples = 30;
 
 bool sampleLightToSun(vec3 point, vec3 sunDir, vec3 planetPos, float planetRadius, out float opticalDepth) {
   float _;
@@ -73,8 +74,6 @@ vec3 getLightContributionfromRay(
     float secondDist) {
   float opticalDepth = 0.0;
 
-  // float totalSunOpticalDepth = 0.0;
-
   vec3 accumulatedLight;
   float distAlongRay = 0.0;
   float segmentLength = (secondDist - firstDist) / float(numViewSamples);
@@ -90,15 +89,12 @@ vec3 getLightContributionfromRay(
 
     if (overGround) {
       vec3 transmittance = exp(-scatteringCoefficient * (sunRayOpticalDepth + opticalDepth));
-      // vec3 transmittance = exp(-scatteringCoefficient * (sunRayOpticalDepth));
       accumulatedLight += transmittance * segmentOpticalDepth;
-      // totalSunOpticalDepth += sunRayOpticalDepth;
     }
 
     distAlongRay += segmentLength;
   }
 
-  // return vec3(totalSunOpticalDepth) / (atmosphereSize * float(numViewSamples));
   return accumulatedLight;
 }
 
@@ -112,11 +108,12 @@ void main() {
 
   float firstDist, secondDist;
   if(!rayIntersect(cameraPosition, viewDir, planetPos, atmosphereSize, firstDist, secondDist)) {
+    // ray is outside atmosphere
     light = vec3(0.0, 0.0, 0.0);
   } else {
-      // Is the ray passing through the planet core?
     float firstPlanetDist, secondPlanetDist;
     if (rayIntersect(cameraPosition, viewDir, planetPos, planetRadius, firstPlanetDist, secondPlanetDist)) {
+      // ray early terminates at planet
       secondDist = firstPlanetDist;
     }
 
