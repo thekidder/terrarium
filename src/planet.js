@@ -116,7 +116,7 @@ class Planet {
         heightmapScale: { value: 255 / (0.25 * this.size) },
       },
     });
-    const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize, 5);
+    const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize * 1.5, 5);
     this.skySphere = new THREE.Mesh(skyGeometry, this.skyMaterial);
     this.skySphere.name = "sky";
     this.scene.add(this.skySphere);
@@ -240,6 +240,8 @@ class Planet {
     this.t += millis;
 
     this.skyMaterial.uniforms.sunDir.value = this.sun.position.clone();
+    this.skyMaterial.uniforms.sunIntensity.value = (new THREE.Vector3(this.sunIntensity, this.sunIntensity, this.sunIntensity)).addScalar(Math.sin(this.t * 0.0012));
+    this.skyMaterial.uniforms.scaleHeight.value = this.scaleHeight + 0.1 * Math.sin(this.t * 0.0012);
   }
 
   findPath(start, end) {
