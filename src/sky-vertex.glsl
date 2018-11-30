@@ -94,7 +94,7 @@ vec3 getLightContributionfromRay(
       accumulatedLight += transmittance * segmentOpticalDepth;
       // totalSunOpticalDepth += sunRayOpticalDepth;
     }
-      
+
     distAlongRay += segmentLength;
   }
 
@@ -112,7 +112,7 @@ void main() {
 
   float firstDist, secondDist;
   if(!rayIntersect(cameraPosition, viewDir, planetPos, atmosphereSize, firstDist, secondDist)) {
-    light = vec3(1.0, 0.0, 1.0);
+    light = vec3(0.0, 0.0, 0.0);
   } else {
       // Is the ray passing through the planet core?
     float firstPlanetDist, secondPlanetDist;
