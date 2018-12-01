@@ -9,7 +9,7 @@ import { savePng } from './image.js';
 
 import planetVertexShader from './planet-vertex.glsl';
 import skyVertexShader from './sky-vertex.glsl';
-import skyFragmentShader from './sky-fragment.glsl';
+import fragmentShader from './vertex-lighting-fragment.glsl';
 
 class Planet {
   constructor(scene, sun, heightmap, size) {
@@ -61,7 +61,7 @@ class Planet {
     this.material = new THREE.ShaderMaterial({
       side: THREE.FrontSide,
       vertexShader: planetVertexShader,
-      fragmentShader: skyFragmentShader,
+      fragmentShader: fragmentShader,
       vertexColors: THREE.FaceColors,
       uniforms: {
         sunDir: { value: this.sun.position.clone() },
@@ -101,7 +101,7 @@ class Planet {
     this.skyMaterial = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       vertexShader: skyVertexShader,
-      fragmentShader: skyFragmentShader,
+      fragmentShader: fragmentShader,
       uniforms: {
         sunDir: { value: this.sun.position.clone() },
         planetPos: { value: new THREE.Vector3(0, 0, 0) },
