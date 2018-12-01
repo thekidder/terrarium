@@ -28,7 +28,8 @@ class Planet {
     this.scaleFactor = 1e5;
     this.scaleHeight = 1.9;
     this.rayScaleHeight = 1.1;
-    this.sunIntensity = 15;
+    this.sunIntensity = (new THREE.Vector3(1, 1, 1)).multiplyScalar(15);
+    this.planetPos = new THREE.Vector3(0, 0, 0);
 
     this.scene = scene;
     this.t = 0;
@@ -41,42 +42,24 @@ class Planet {
         (1 / Math.pow(wavelength, 4));
     }
 
-    const scatteringCoefficient = new THREE.Vector3(
+    this.scatteringCoefficient = new THREE.Vector3(
       scatteringForWavelength(680e-9) * this.scaleFactor,
       scatteringForWavelength(550e-9) * this.scaleFactor,
       scatteringForWavelength(440e-9) * this.scaleFactor,
     );
 
-    console.log(`scattering coefficient: ${JSON.stringify(scatteringCoefficient)}`);
+    console.log(`scattering coefficient: ${JSON.stringify(this.scatteringCoefficient)}`);
 
-    const heightmapTexture = this.heightmapAsTexture(heightmap);
+    // const heightmapTexture = this.heightmapAsTexture(heightmap);
 
-    // this.material = new THREE.MeshPhongMaterial({
-    //   emissive: 0x000000,
-    //   side: THREE.DoubleSide,
-    //   flatShading: true,
-    //   vertexColors: THREE.FaceColors,
-    //   shininess: 20,
-    // });
     this.material = new THREE.ShaderMaterial({
       side: THREE.FrontSide,
       vertexShader: planetVertexShader,
       fragmentShader: fragmentShader,
       vertexColors: THREE.FaceColors,
-      uniforms: {
-        sunDir: { value: this.sun.position.clone() },
-        planetPos: { value: new THREE.Vector3(0, 0, 0) },
-        planetRadius: { value: this.waterSize * 0.9 },
-        atmosphereSize: { value: this.atmosphereSize },
-        scatteringCoefficient: { value: scatteringCoefficient },
-        sunIntensity: { value: (new THREE.Vector3(this.sunIntensity, this.sunIntensity, this.sunIntensity)).multiplyScalar(1.5) },
-        scaleHeight: { value: this.scaleHeight },
-        rayScaleHeight: { value: this.rayScaleHeight },
-        heightmap: { value: heightmapTexture },
-        heightmapMin: { value: this.size - 0.5 * 0.25 * this.size },
-        heightmapScale: { value: 255 / (0.25 * this.size) },
-      },
     });
+
+    this.setScatteringUniforms(this.material, 1.5);
 
     this.rotation = 0.0;
 
@@ -102,27 +85,16 @@ class Planet {
       side: THREE.BackSide,
       vertexShader: skyVertexShader,
       fragmentShader: fragmentShader,
-      uniforms: {
-        sunDir: { value: this.sun.position.clone() },
-        planetPos: { value: new THREE.Vector3(0, 0, 0) },
-        planetRadius: { value: this.waterSize * 0.9 },
-        atmosphereSize: { value: this.atmosphereSize },
-        scatteringCoefficient: { value: scatteringCoefficient },
-        sunIntensity: { value: new THREE.Vector3(this.sunIntensity, this.sunIntensity, this.sunIntensity) },
-        scaleHeight: { value:this.scaleHeight },
-        rayScaleHeight: { value: this.rayScaleHeight },
-        heightmap: { value: heightmapTexture },
-        heightmapMin: { value: this.size - 0.5 * 0.25 * this.size },
-        heightmapScale: { value: 255 / (0.25 * this.size) },
-      },
     });
+
+    this.setScatteringUniforms(this.skyMaterial, 1);
+
     const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize * 1.5, 5);
     this.skySphere = new THREE.Mesh(skyGeometry, this.skyMaterial);
     this.skySphere.name = "sky";
     this.scene.add(this.skySphere);
 
     this.setHeightmap(heightmap);
-    this.heightmapTexture = heightmapTexture;
 
     this.sphere.geometry.faces.forEach(function(f) {
       // if (Math.random() > 0.5) {
@@ -137,6 +109,17 @@ class Planet {
     }.bind(this));
 
     this.sphere.geometry.colorsNeedUpdate = true;
+
+    // material.uniforms = {
+    //   sunDir: { value: this.sun.position },
+    //   planetPos: { value: this.planetPos },
+    //   planetRadius: { value: this.waterSize * 0.9 },
+    //   atmosphereSize: { value: this.atmosphereSize },
+    //   scatteringCoefficient: { value: this.scatteringCoefficient },
+    //   sunIntensity: { value: this.sunIntensity.clone().multiplyScalar(sunIntensityScale) },
+    //   scaleHeight: { value: this.scaleHeight + 0.1 * Math.sin(this.t * 0.0012) },
+    //   rayScaleHeight: { value: this.rayScaleHeight },
+    // };
   }
 
   makeGrass(face) {
@@ -161,8 +144,6 @@ class Planet {
     this.navmesh = new Navmesh(this.heightmap.geometry, this.size);
     this.navmesh.build();
 
-    // this.saveHeightmap(this.heightmap);
-
     this.scene.add(this.sphere);
   }
 
@@ -178,25 +159,14 @@ class Planet {
       for (let j = 0; j < height; ++j) {
         const u = i / width;
         const v = j / height;
-        // console.log(`uv: ${u},${v}`);
         const x = Math.cos(2 * Math.PI * (u - 0.5));
         const y = Math.sin(Math.PI * (0.5 - v));
         const z = Math.sin(2 * Math.PI * (u - 0.5));
-        // console.log(`xyz: ${x},${y},${z}`);
 
         const original = (new THREE.Vector3(x, y, z)).normalize().multiplyScalar(this.size);
         const h = heightmap.placeOnSurface(original);
-        // console.log(`original: ${JSON.stringify(original)} h: ${JSON.stringify(h.normalize().multiplyScalar(this.size))}`);
-        // if (h.length() < 5.574625) {
-        //   console.log(h.length());
-        // }
-        // let relativeHeight = 0;
-        // if (h.length() > this.size) {
-        //   relativeHeight = 255;
-        // }
         let relativeHeight = scale * (h.length() - min);
         relativeHeight = Math.max(0, Math.min(relativeHeight, 255));
-        // console.log(`rel: ${relativeHeight}`);
         const index = i + j * width;
         data[index * 4 + 0] = relativeHeight;
         data[index * 4 + 1] = relativeHeight;
@@ -225,6 +195,17 @@ class Planet {
     savePng('heightmap.png', width, height, data);
   }
 
+  setScatteringUniforms(material, sunIntensityScale) {
+    material.uniforms.sunDir = { value: this.sun.position };
+    material.uniforms.planetPos = { value: this.planetPos };
+    material.uniforms.planetRadius = { value: this.waterSize * 0.9 };
+    material.uniforms.atmosphereSize = { value: this.atmosphereSize };
+    material.uniforms.scatteringCoefficient = { value: this.scatteringCoefficient };
+    material.uniforms.sunIntensity = { value: this.sunIntensity.clone().multiplyScalar(sunIntensityScale) };
+    material.uniforms.scaleHeight ={ value: this.scaleHeight + 0.1 * Math.sin(this.t * 0.0012) };
+    material.uniforms.rayScaleHeight = { value: this.rayScaleHeight };
+  }
+
   update(millis) {
     this.waterSphere.geometry.vertices.forEach(function(v) {
       const s = 2.4;
@@ -239,9 +220,8 @@ class Planet {
     this.waterSphere.rotation.y = this.rotation;
     this.t += millis;
 
-    this.skyMaterial.uniforms.sunDir.value = this.sun.position.clone();
-    this.skyMaterial.uniforms.sunIntensity.value = (new THREE.Vector3(this.sunIntensity, this.sunIntensity, this.sunIntensity)).addScalar(Math.sin(this.t * 0.0012));
-    this.skyMaterial.uniforms.scaleHeight.value = this.scaleHeight + 0.1 * Math.sin(this.t * 0.0012);
+    this.setScatteringUniforms(this.material, 1.5);
+    this.setScatteringUniforms(this.skyMaterial, 1);
   }
 
   findPath(start, end) {

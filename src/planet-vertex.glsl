@@ -4,9 +4,6 @@ uniform float atmosphereSize;
 uniform float planetRadius;
 uniform vec3 scatteringCoefficient;
 uniform vec3 sunIntensity;
-uniform sampler2D heightmap;
-uniform float heightmapScale;
-uniform float heightmapMin;
 
 uniform float rayScaleHeight;
 uniform float scaleHeight;
