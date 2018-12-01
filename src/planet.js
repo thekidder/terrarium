@@ -14,7 +14,6 @@ import fragmentShader from './vertex-lighting-fragment.glsl';
 class Planet {
   constructor(scene, sun, heightmap, size) {
     this.colors = {
-      // TODO: emissive base colors
       sand: { base: 0xBFAE6D, emissive: 0x000000 },
       grass: { base: 0x32B552, emissive: 0x000000 },
     };
@@ -49,8 +48,6 @@ class Planet {
     );
 
     console.log(`scattering coefficient: ${JSON.stringify(this.scatteringCoefficient)}`);
-
-    // const heightmapTexture = this.heightmapAsTexture(heightmap);
 
     this.material = new THREE.ShaderMaterial({
       side: THREE.FrontSide,
@@ -97,29 +94,12 @@ class Planet {
     this.setHeightmap(heightmap);
 
     this.sphere.geometry.faces.forEach(function(f) {
-      // if (Math.random() > 0.5) {
       f.color.setHex(this.colors.sand.base);
       f.emissive = new THREE.Color(this.colors.sand.emissive);
       f.grass = false;
-      // } else {
-      //   f.color.setHex(this.colors.grass.base);
-      //   f.emissive = new THREE.Color(this.colors.grass.emissive);
-      //   f.grass = true;
-      // }
     }.bind(this));
 
     this.sphere.geometry.colorsNeedUpdate = true;
-
-    // material.uniforms = {
-    //   sunDir: { value: this.sun.position },
-    //   planetPos: { value: this.planetPos },
-    //   planetRadius: { value: this.waterSize * 0.9 },
-    //   atmosphereSize: { value: this.atmosphereSize },
-    //   scatteringCoefficient: { value: this.scatteringCoefficient },
-    //   sunIntensity: { value: this.sunIntensity.clone().multiplyScalar(sunIntensityScale) },
-    //   scaleHeight: { value: this.scaleHeight + 0.1 * Math.sin(this.t * 0.0012) },
-    //   rayScaleHeight: { value: this.rayScaleHeight },
-    // };
   }
 
   makeGrass(face) {

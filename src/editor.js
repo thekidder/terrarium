@@ -16,7 +16,7 @@ import Debug from './debug.js';
 import Planet from './planet.js';
 import PlanetGenerator from './planet-generator.js';
 import Nibble from './nibble.js';
-import { Sun } from './scene.js';
+import { Sun } from './sun.js';
 
 const size = 6.371;
 
@@ -29,7 +29,7 @@ class Editor {
     this.camera.lookAt(new THREE.Vector3());
 
     this.seed = 8711939729391615;
-    this.sun = new Sun(this.scene, this.camera, size);
+    this.sun = new Sun(this.scene, this.camera, size, { debug: true });
     this.planet = new Planet(this.scene, this.sun, this.buildHeightmap(), size);
     this.mouse = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
@@ -48,33 +48,6 @@ class Editor {
     };
 
     this.renderUI();
-
-    // load a resource
-    new THREE.ObjectLoader().load(
-      // resource URL
-      'assets/rotation.json',
-      // Function when resource is loaded
-      function ( object, materials ) {
-        const material = new THREE.MeshPhongMaterial({
-          color: 0x555555,
-          emissive: 0x333333,
-          side: THREE.DoubleSide,
-          flatShading: true,
-        });
-        // const object = new THREE.Mesh( geometry, material );
-        object.position.set(0, size, 0);
-        object.traverse(function(o) {
-          o.material = material;
-        });
-
-        const animation = object.animations[0];
-        this.mixer = new THREE.AnimationMixer(object);
-
-        this.scene.add( object );
-
-        this.mixer.clipAction(animation).play();
-      }.bind(this)
-    );
   }
 
   renderUI() {
@@ -114,12 +87,6 @@ class Editor {
             onChange={this.rayScaleHeightChange.bind(this)}
           />
         </Form>
-        <FormControl
-          type='text'
-          value={this.state.sunIntensity}
-          placeholder='sunIntensity'
-          onChange={this.sunIntensityChange.bind(this)}
-        />
         <h6>Grass Color</h6>
         <ColorPicker
           type='sketch'
@@ -198,18 +165,6 @@ class Editor {
     this.renderUI();
   }
 
-  sunIntensityChange(event) {
-    this.state.sunIntensity = event.target.value;
-    const val = parseFloat(event.target.value);
-    if (!isNaN(val)) {
-      console.log(`changing sun intensity height to ${JSON.stringify(val)}`);
-
-      this.planet.sunIntensity = val;
-      this.planet.skyMaterial.uniforms.sunIntensity.value = new THREE.Vector3(val, val, val);
-
-    }
-    this.renderUI();
-  }
   save() {
     const data = {
       seed: this.planet.seed,

@@ -10,7 +10,7 @@ import Nibble from './nibble.js';
 import { PathFactory } from './path.js';
 import Planet from './planet.js';
 import PlanetMath from './planet-math.js';
-import { Sun } from './scene.js';
+import { Sun } from './sun.js';
 
 
 class Game {

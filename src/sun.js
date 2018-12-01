@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import Debug from './debug.js';
 
 const defaultOptions = {
-  debug: true,
+  debug: false,
   scale: 1,
 };
 
@@ -14,7 +14,7 @@ class Sun {
 
     this.scene = scene;
     this.size = size;
-    this.speed = (2 * Math.PI) * 0.000 * (1/60);
+    this.speed = (2 * Math.PI) * 0.001 * (1/60);
 
     this.sun = new THREE.DirectionalLight(0xF1EEC9, 0.9);
     this.scene.add(this.sun);
@@ -30,13 +30,13 @@ class Sun {
         side: THREE.DoubleSide,
         flatShading: true,
       });
-      this.sunGeometry = new THREE.IcosahedronGeometry(this.size / 50.0, 0);
+      this.sunGeometry = new THREE.IcosahedronGeometry(this.size / 25.0, 0);
       this.sunMesh = new THREE.Mesh(this.sunGeometry, sunMaterial);
       this.scene.add(this.sunMesh);
     }
 
     this.position = new THREE.Vector3(1, 0, 0);
-    this.sunRotationVector = new THREE.Vector3(0, 0, 1);
+    this.sunRotationVector = new THREE.Vector3(0, 1, 0);
   }
 
   update(millis) {
@@ -44,7 +44,7 @@ class Sun {
     this.sun.position.copy(this.position);
     this.sun.position.normalize();
     if (this.sunMesh) {
-      this.sunMesh.position.copy(this.sun.position.clone().multiplyScalar(this.size * 1.2));
+      this.sunMesh.position.copy(this.sun.position.clone().multiplyScalar(this.size * 1.8));
     }
   }
 }
