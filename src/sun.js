@@ -35,7 +35,7 @@ class Sun {
       this.scene.add(this.sunMesh);
     }
 
-    this.position = new THREE.Vector3(1, 0, 0);
+    this.position = (new THREE.Vector3(0.5, 0, 1)).normalize();
     this.sunRotationVector = new THREE.Vector3(0, 1, 0);
   }
 

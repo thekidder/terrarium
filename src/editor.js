@@ -121,7 +121,7 @@ class Editor {
 
   sandChange(color) {
     this.planet.sphere.geometry.faces.forEach(function(f) {
-      if (!f.grass) {
+      if (f.sand) {
         f.color.setRGB(color.rgb.r/255, color.rgb.g/255, color.rgb.b/255);
       }
     });

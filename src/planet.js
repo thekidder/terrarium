@@ -14,15 +14,18 @@ import fragmentShader from './vertex-lighting-fragment.glsl';
 class Planet {
   constructor(scene, sun, heightmap, size) {
     this.colors = {
-      sand: { base: 0xBFAE6D, emissive: 0x000000 },
-      grass: { base: 0x32B552, emissive: 0x000000 },
+      sand: { base: 0xC3BB7A },
+      grass: { base: 0x36B129 },
+      snow: { base: 0xffffff },
     };
 
     this.sun = sun;
     this.size = size;
     this.waterSize = size;
     this.atmosphereSize = size * 1.75;
-    this.sandThreshold = 0.3;
+    this.sandMinThreshold = 1.0;
+    this.sandMaxThreshold = 1.05;
+    this.grassMaxThreshold = 1.11;
 
     this.scaleFactor = 1e5;
     this.scaleHeight = 1.9;
@@ -94,9 +97,20 @@ class Planet {
     this.setHeightmap(heightmap);
 
     this.sphere.geometry.faces.forEach(function(f) {
-      f.color.setHex(this.colors.sand.base);
-      f.emissive = new THREE.Color(this.colors.sand.emissive);
-      f.grass = false;
+      const heights = [
+        this.sphere.geometry.vertices[f.a].length(),
+        this.sphere.geometry.vertices[f.b].length(),
+        this.sphere.geometry.vertices[f.c].length(),
+      ];
+      if (_.min(heights) < this.size * this.sandMinThreshold && _.max(heights) < this.size * this.sandMaxThreshold) {
+        f.color.setHex(this.colors.sand.base);
+        f.sand = true;
+      } else if (_.max(heights) < this.size * this.grassMaxThreshold) {
+        f.color.setHex(this.colors.grass.base);
+        f.grass = true;
+      } else {
+        f.color.setHex(this.colors.snow.base);
+      }
     }.bind(this));
 
     this.sphere.geometry.colorsNeedUpdate = true;
