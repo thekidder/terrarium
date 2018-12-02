@@ -16,13 +16,6 @@ import { Sun } from './sun.js';
 class Game {
   constructor() {
     this.scene = new THREE.Scene();
-    // aspect will get set in onResize
-    //this.camera = new THREE.PerspectiveCamera( 75, 1.0, 0.1, 1000 );
-    this.camera = new ArcBallCamera(80, new THREE.Vector3());
-    this.camera.lookAt(new THREE.Vector3());
-
-    this.sun = new Sun(this.scene, this.camera);
-
     const loader = new THREE.FileLoader();
 
     console.log('loading planet data...');
@@ -34,28 +27,29 @@ class Game {
     this.monuments = [];
 
     new THREE.ObjectLoader().load(
-      // resource URL
       'assets/flower.json',
-      // Function when resource is loaded
       function ( object, materials ) {
-        const material = new THREE.MeshPhongMaterial({
-          color: 0x555555,
-          emissive: 0x333333,
-          side: THREE.DoubleSide,
-          flatShading: true,
-        });
-        // object.traverse(function(o) {
-        //   o.material = material;
-        // });
-
         this.markerObj = object;
       }.bind(this)
     );
+    this.rotation = 0;
+    this.cameraXOffset = document.body.clientWidth / 2;
+    this.cameraYOffset = document.body.clientHeight / 2;
   }
 
   planetLoaded(data) {
     data = JSON.parse(data);
     console.log('loaded planet data...');
+
+    this.camera = new ArcBallCamera(data.size * 3.3, new THREE.Vector3());
+    this.camera.lookAt(new THREE.Vector3());
+
+    if (this.currentHeight && this.currentWidth) {
+      this.onResize(this.currentWidth, this.currentHeight);
+    }
+
+    this.sun = new Sun(this.scene, this.camera, data.size);
+
     this.planet = new Planet(this.scene, this.sun, Heightmap.load(data.heightmap), data.size);
     this.size = data.size;
     console.log('created planet...');
@@ -97,7 +91,7 @@ class Game {
   moveCameraTo(pos) {
     this.camera.position.copy(pos);
     this.camera.position.multiplyScalar(80);
-    this.camera.up = new THREE.Vector3(0,0,1);
+    this.camera.up = new THREE.Vector3(0, 1, 0);
     this.camera.rotate(0, 0);
   }
 
@@ -121,8 +115,11 @@ class Game {
     }
 
     this.sun.update(millis);
-    this.moveCameraTo(this.sun.position);
-    const scale = 1;
+
+    //this.rotation += millis * 0.00005;
+    this.camPos = new THREE.Vector3(Math.sin(this.rotation), 0.0, Math.cos(this.rotation));
+    this.moveCameraTo(this.camPos);
+
     const arcball = this.camera.getArcballVector(this.cameraXOffset, this.cameraYOffset);
     arcball.multiplyScalar(-0.8);
     this.camera.rotateBy(arcball);
@@ -164,7 +161,11 @@ class Game {
   }
 
   onResize(width, height) {
-    this.camera.onResize(width, height);
+    this.currentWidth = width;
+    this.currentHeight = height;
+    if (this.camera) {
+      this.camera.onResize(width, height);
+    }
   }
 
   onFocus(event) {

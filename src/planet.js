@@ -86,7 +86,7 @@ class Planet {
 
     this.setScatteringUniforms(this.skyMaterial, 1);
 
-    const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize * 1.5, 5);
+    const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize * 1.1, 5);
     this.skySphere = new THREE.Mesh(skyGeometry, this.skyMaterial);
     this.skySphere.name = "sky";
     this.scene.add(this.skySphere);
@@ -132,8 +132,6 @@ class Planet {
 
     const scale = 255 / (0.25 * this.size);
     const min = this.size - 0.5 * 0.25 * this.size;
-
-    console.log(`scale: ${scale} min: ${min}`);
 
     for (let i = 0; i < width; ++i) {
       for (let j = 0; j < height; ++j) {
