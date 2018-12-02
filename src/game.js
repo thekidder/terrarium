@@ -1,3 +1,4 @@
+import Impetus from 'impetus';
 import Random from 'random-seed';
 import Simplex from 'simplex-noise';
 import * as THREE from 'three';
@@ -35,6 +36,11 @@ class Game {
     this.rotation = 0;
     this.cameraXOffset = document.body.clientWidth / 2;
     this.cameraYOffset = document.body.clientHeight / 2;
+
+    this.scroller = new Impetus({
+      source: document.body,
+      update: this.onDragPlanet.bind(this),
+    });
   }
 
   planetLoaded(data) {
@@ -48,7 +54,7 @@ class Game {
       this.onResize(this.currentWidth, this.currentHeight);
     }
 
-    this.sun = new Sun(this.scene, this.camera, data.size);
+    this.sun = new Sun(this.scene, this.camera, data.size, {debug: true});
 
     this.planet = new Planet(this.scene, this.sun, Heightmap.load(data.heightmap), data.size);
     this.size = data.size;
@@ -73,7 +79,7 @@ class Game {
       this.nibbles.push(nibble);
     }
 
-    //this.lookAtNibbles();
+    // this.lookAtNibbles();
   }
 
   lookAtNibbles() {
@@ -86,6 +92,12 @@ class Game {
 
     const pos = avgPos.normalize().multiplyScalar(this.size * 2.2);
     this.moveCameraTo(pos);
+  }
+
+  onDragPlanet(x, y) {
+    console.log(`x: ${x} y: ${y}`);
+    const inertia = 0.003;
+    this.rotation = inertia * -x;
   }
 
   moveCameraTo(pos) {
@@ -120,7 +132,7 @@ class Game {
     this.camPos = new THREE.Vector3(Math.sin(this.rotation), 0.0, Math.cos(this.rotation));
     this.moveCameraTo(this.camPos);
 
-    const arcball = this.camera.getArcballVector(this.cameraXOffset, this.cameraYOffset);
+    const arcball = this.camera.getArcballVector(0, document.body.clientHeight / 2);
     arcball.multiplyScalar(-0.8);
     this.camera.rotateBy(arcball);
   }
@@ -181,15 +193,18 @@ class Game {
   }
 
   onMouseDown(event) {
+    this.startDragX = event.clientX;
   }
 
   onMouseUp(event) {
-    if (!this.isDrag) {
-      this.mouseEvent.x = event.clientX / window.innerWidth * 2 - 1;
-      this.mouseEvent.y = -event.clientY / window.innerHeight * 2 + 1;
+    // if (!this.isDrag) {
+    //   this.mouseEvent.x = event.clientX / window.innerWidth * 2 - 1;
+    //   this.mouseEvent.y = -event.clientY / window.innerHeight * 2 + 1;
 
-      this.placeMonument(this.mouseEvent);
-    }
+    //   // this.placeMonument(this.mouseEvent);
+    // } else {
+    //   const totalDrag = event.clientX - this.startDragX;
+    // }
   }
 
   onMouseMove(event) {

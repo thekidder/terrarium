@@ -266,6 +266,6 @@ class Editor {
   }
 }
 
-const app = new App('Terrarium Editor', new Editor());
+const app = new App('Terrarium Editor', new Editor(), { debug: true });
 app.setEventListeners();
 app.run();

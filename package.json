@@ -31,6 +31,7 @@
     "glslify": "^7.0.0",
     "glslify-loader": "^2.0.0",
     "ify-loader": "^1.1.0",
+    "impetus": "^0.8.8",
     "path": "^0.12.7",
     "random-seed": "^0.3.0",
     "raw-loader": "^0.5.1",

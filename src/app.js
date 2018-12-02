@@ -2,17 +2,21 @@ import * as THREE from 'three';
 import Stats from 'stats.js';
 
 class App {
-  constructor(name, game) {
+  constructor(name, game, options) {
+    options = options || {};
+
     this.name = name;
     this.game = game;
 
-    // create FPS counter
-    this.stats = new Stats();
-    this.stats.setMode(0); // 0: fps, 1: ms, 2: mb
-    this.stats.domElement.style.position = 'absolute';
-    this.stats.domElement.style.left = '0px';
-    this.stats.domElement.style.top = '0px';
-    document.body.appendChild(this.stats.domElement);
+    if (options.debug) {
+      // create FPS counter
+      this.stats = new Stats();
+      this.stats.setMode(0); // 0: fps, 1: ms, 2: mb
+      this.stats.domElement.style.position = 'absolute';
+      this.stats.domElement.style.left = '0px';
+      this.stats.domElement.style.top = '0px';
+      document.body.appendChild(this.stats.domElement);
+    }
 
     // create renderer
     this.renderer = new THREE.WebGLRenderer({antialias: true});
@@ -59,11 +63,11 @@ class App {
   }
 
   render() {
-    this.stats.begin();
+    this.stats && this.stats.begin();
 
     this.updateLoop();
     this.renderer.render(this.game.scene, this.game.camera);
-    this.stats.end();
+    this.stats && this.stats.end();
 
     if (!this.paused) {
       this.requestRender();
