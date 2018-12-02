@@ -1,11 +1,14 @@
-const int numSunSamples = 30;
+const int numSunSamples = 10;
 
 #pragma glslify: rayIntersect = require('./ray-intersect.glsl');
 
 bool sampleLightToSun(vec3 point, vec3 sunDir, vec3 planetPos, float planetRadius, float atmosphereRadius, float sunScaleHeight, out float opticalDepth) {
   float _;
   float atmosphereThicknessAlongSunDir;
-  rayIntersect(point, sunDir, planetPos, atmosphereRadius, _, atmosphereThicknessAlongSunDir);
+
+  if (!rayIntersect(point, sunDir, planetPos, atmosphereRadius, _, atmosphereThicknessAlongSunDir)) {
+    return false;
+  }
 
   float distAlongRay = 0.0;
   float segmentLength = distance(point, point + sunDir * atmosphereThicknessAlongSunDir) / float(numSunSamples);
@@ -51,7 +54,8 @@ vec3 getLightContributionfromRay(
     opticalDepth += segmentOpticalDepth;
 
     float sunRayOpticalDepth = 0.0;
-    bool overGround = sampleLightToSun(point, sunDir, planetPos, planetRadius, atmosphereRadius, sunScaleHeight, sunRayOpticalDepth);
+    bool overGround = sampleLightToSun(point, sunDir, planetPos, planetRadius, atmosphereRadius,
+      sunScaleHeight, sunRayOpticalDepth);
 
     if (overGround) {
       vec3 transmittance = exp(-scatteringCoefficient * (sunRayOpticalDepth + opticalDepth));

@@ -13,7 +13,7 @@ bool rayIntersect(
 
   float intersectionMagnitudeSquared = dot(sphereDir, sphereDir) - lenToCenter * lenToCenter;
 
-  if (intersectionMagnitudeSquared > radiusSquared) {
+  if (intersectionMagnitudeSquared >= radiusSquared) {
     return false;
   }
 
