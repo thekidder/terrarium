@@ -30,7 +30,7 @@ class Editor {
 
     this.seed = 8711939729391615;
     this.sun = new Sun(this.scene, this.camera, size, { debug: true });
-    this.planet = new Planet(this.scene, this.sun, this.buildHeightmap(), size);
+    this.planet = new Planet(this.scene, this.sun, this.camera, this.buildHeightmap(), size);
     this.mouse = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
     this.raycaster.near = size / 3;

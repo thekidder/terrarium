@@ -1,9 +1,8 @@
-float getRayleighPhase(vec3 sunDir, vec3 viewDir) {
+float getRayleighPhase(float cosThetaSq) {
   const float PI = 3.1415926535897932384626433832795;
-  const float phaseConstant = 3.0 / (16.0 * PI);
+  const float phaseConstant = 3.0 / PI;
 
-  float cosTheta = dot(viewDir, sunDir);
-  return phaseConstant * (1.0 + cosTheta * cosTheta);
+  return phaseConstant * (1.0 + cosThetaSq);
 }
 
 #pragma glslify: export(getRayleighPhase)

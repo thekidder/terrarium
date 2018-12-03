@@ -9,10 +9,12 @@ import { savePng } from './image.js';
 
 import planetVertexShader from './planet-vertex.glsl';
 import skyVertexShader from './sky-vertex.glsl';
-import fragmentShader from './vertex-lighting-fragment.glsl';
+import fragmentShader from './sky-fragment.glsl';
+import sunboxVertexShader from './sunbox-vertex.glsl';
+import sunboxFragmentShader from './sunbox-fragment.glsl';
 
 class Planet {
-  constructor(scene, sun, heightmap, size) {
+  constructor(scene, sun, camera, heightmap, size) {
     this.colors = {
       sand: { base: 0xC3BB7A },
       grass: { base: 0x36B129 },
@@ -20,6 +22,7 @@ class Planet {
     };
 
     this.sun = sun;
+    this.camera = camera;
     this.size = size;
     this.waterSize = size;
     this.atmosphereSize = size * 1.75;
@@ -30,11 +33,22 @@ class Planet {
     this.scaleFactor = 1e5;
     this.scaleHeight = 1.9;
     this.rayScaleHeight = 1.1;
-    this.sunIntensity = (new THREE.Vector3(1, 1, 1)).multiplyScalar(15);
+    this.sunIntensity = new THREE.Vector3(1, 1, 0.94).multiplyScalar(0.8);
     this.planetPos = new THREE.Vector3(0, 0, 0);
+    this.mieConstant = new THREE.Vector3(0.007, 0.007, 0.007);
 
     this.scene = scene;
     this.t = 0;
+
+    const sunboxGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize * 8.0, 4);
+    this.sunboxMaterial = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      vertexShader: sunboxVertexShader,
+      fragmentShader: sunboxFragmentShader,
+    });
+
+    this.sunbox = new THREE.Mesh(sunboxGeometry, this.sunboxMaterial);
+    scene.add(this.sunbox);
 
     function scatteringForWavelength(wavelength) {
       const refractiveIndex = 1.00029;
@@ -58,8 +72,6 @@ class Planet {
       fragmentShader: fragmentShader,
       vertexColors: THREE.FaceColors,
     });
-
-    this.setScatteringUniforms(this.material, 1.5);
 
     this.rotation = 0.0;
 
@@ -86,8 +98,6 @@ class Planet {
       vertexShader: skyVertexShader,
       fragmentShader: fragmentShader,
     });
-
-    this.setScatteringUniforms(this.skyMaterial, 1);
 
     const skyGeometry = new THREE.IcosahedronGeometry(this.atmosphereSize * 1.1, 5);
     this.skySphere = new THREE.Mesh(skyGeometry, this.skyMaterial);
@@ -187,7 +197,8 @@ class Planet {
     savePng('heightmap.png', width, height, data);
   }
 
-  setScatteringUniforms(material, sunIntensityScale) {
+  setScatteringUniforms(material, sunIntensityScale, mieScale) {
+    const g = -0.98;
     material.uniforms.sunDir = { value: this.sun.position };
     material.uniforms.planetPos = { value: this.planetPos };
     material.uniforms.planetRadius = { value: this.waterSize * 0.9 };
@@ -196,14 +207,21 @@ class Planet {
     material.uniforms.sunIntensity = { value: this.sunIntensity.clone().multiplyScalar(sunIntensityScale) };
     material.uniforms.scaleHeight ={ value: this.scaleHeight + 0.1 * Math.sin(this.t * 0.0012) };
     material.uniforms.rayScaleHeight = { value: this.rayScaleHeight };
+    material.uniforms.g = { value: g };
+    material.uniforms.gSq = { value: g * g };
+    material.uniforms.minMieDepth = { value: 0.025 };
+    material.uniforms.mieConstant = { value: this.mieConstant.clone().multiplyScalar(mieScale) };
+  }
+
+  beforeRender() {
   }
 
   update(millis) {
     this.waterSphere.geometry.vertices.forEach(function(v) {
       const s = 2.4;
-      let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 5000.0);
-      noise = noise * 0.5 + 0.5;
-      v.copy(v.original.clone().multiplyScalar(this.waterSize));
+      let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 2000.0);
+      noise = noise * 0.1;
+      v.copy(v.original.clone().multiplyScalar(this.waterSize + noise));
     }.bind(this));
     this.waterSphere.geometry.verticesNeedUpdate = true;
 
@@ -212,8 +230,9 @@ class Planet {
     this.waterSphere.rotation.y = this.rotation;
     this.t += millis;
 
-    this.setScatteringUniforms(this.material, 1.5);
-    this.setScatteringUniforms(this.skyMaterial, 1);
+    this.setScatteringUniforms(this.material, 1.5, 0.01);
+    this.setScatteringUniforms(this.skyMaterial, 1, 1.0);
+    this.setScatteringUniforms(this.sunboxMaterial, 1, 1.0);
   }
 
   findPath(start, end) {

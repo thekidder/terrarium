@@ -33,7 +33,8 @@ class Game {
         this.markerObj = object;
       }.bind(this)
     );
-    this.rotation = 0;
+    this.startRotation = -0.6 * Math.PI;
+    this.rotation = this.startRotation;
     this.cameraXOffset = document.body.clientWidth / 2;
     this.cameraYOffset = document.body.clientHeight / 2;
 
@@ -54,9 +55,9 @@ class Game {
       this.onResize(this.currentWidth, this.currentHeight);
     }
 
-    this.sun = new Sun(this.scene, this.camera, data.size, {debug: true});
+    this.sun = new Sun(this.scene, this.camera, data.size);
 
-    this.planet = new Planet(this.scene, this.sun, Heightmap.load(data.heightmap), data.size);
+    this.planet = new Planet(this.scene, this.sun, this.camera, Heightmap.load(data.heightmap), data.size);
     this.size = data.size;
     console.log('created planet...');
 
@@ -95,9 +96,8 @@ class Game {
   }
 
   onDragPlanet(x, y) {
-    console.log(`x: ${x} y: ${y}`);
     const inertia = 0.003;
-    this.rotation = inertia * -x;
+    this.rotation = this.startRotation + inertia * -x;
   }
 
   moveCameraTo(pos) {
@@ -105,6 +105,10 @@ class Game {
     this.camera.position.multiplyScalar(80);
     this.camera.up = new THREE.Vector3(0, 1, 0);
     this.camera.rotate(0, 0);
+  }
+
+  beforeRender() {
+    this.planet && this.planet.beforeRender();
   }
 
   update(millis) {

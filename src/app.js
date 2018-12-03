@@ -66,6 +66,7 @@ class App {
     this.stats && this.stats.begin();
 
     this.updateLoop();
+    this.game.beforeRender();
     this.renderer.render(this.game.scene, this.game.camera);
     this.stats && this.stats.end();
 

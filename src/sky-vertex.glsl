@@ -4,25 +4,32 @@ uniform float atmosphereSize;
 uniform float planetRadius;
 uniform vec3 scatteringCoefficient;
 uniform vec3 sunIntensity;
+uniform vec3 mieConstant;
+uniform float minMieDepth;
 
 uniform float scaleHeight;
 uniform float rayScaleHeight;
 
-varying vec3 finalColor;
+varying vec3 rayleigh;
+varying vec3 mie;
+varying vec3 viewDir;
+varying vec3 baseColor;
 
 #pragma glslify: rayIntersect = require('./ray-intersect.glsl');
 #pragma glslify: getLightContributionfromRay = require('./rayleigh-scattering.glsl');
-#pragma glslify: getRayleighPhase = require('./rayleigh-phase.glsl');
 
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 
-  vec3 viewDir = normalize(position - cameraPosition);
+  baseColor = vec3(0.0, 0.0, 0.0);
+  viewDir = normalize(position - cameraPosition);
 
   float firstDist, secondDist;
   if(!rayIntersect(cameraPosition, viewDir, planetPos, atmosphereSize, firstDist, secondDist)) {
     // ray is outside atmosphere
-    finalColor = vec3(0.0, 0.0, 0.0);
+    rayleigh = vec3(0.0, 0.0, 0.0);
+    // use mie scattering with a very small optical depth to render the sun
+    mie = sunIntensity * mieConstant * minMieDepth;
   } else {
     float firstPlanetDist, secondPlanetDist;
     if (rayIntersect(cameraPosition, viewDir, planetPos, planetRadius, firstPlanetDist, secondPlanetDist)) {
@@ -30,10 +37,10 @@ void main() {
       secondDist = firstPlanetDist;
     }
 
-    vec3 rayleigh = getLightContributionfromRay(cameraPosition, viewDir, sunDir, planetPos, planetRadius,
+    vec3 light = getLightContributionfromRay(cameraPosition, viewDir, sunDir, planetPos, planetRadius,
       atmosphereSize, scatteringCoefficient, scaleHeight, rayScaleHeight, firstDist, secondDist);
-    float phase = getRayleighPhase(sunDir, viewDir);
 
-    finalColor = rayleigh * sunIntensity * scatteringCoefficient * phase;
+    rayleigh = sunIntensity * scatteringCoefficient * light;
+    mie = sunIntensity * max(light, minMieDepth) * mieConstant;
   }
 }

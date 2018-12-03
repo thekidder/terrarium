@@ -14,7 +14,7 @@ class Sun {
 
     this.scene = scene;
     this.size = size;
-    this.speed = (2 * Math.PI) * 0.001 * (1/60);
+    this.speed = (2 * Math.PI) * 0.00075 * (1/60);
 
     this.sun = new THREE.DirectionalLight(0xF1EEC9, 0.9);
     this.scene.add(this.sun);
