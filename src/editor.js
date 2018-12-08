@@ -179,6 +179,9 @@ class Editor {
     saveAs(blob, 'planet-data.json');
   }
 
+  beforeRender() {
+  }
+
   update(millis) {
     this.planet.update(millis);
 
