@@ -6,6 +6,8 @@ bool sampleLightToSun(vec3 point, vec3 sunDir, vec3 planetPos, float planetRadiu
   float _;
   float atmosphereThicknessAlongSunDir;
 
+  opticalDepth = 0.0;
+
   if (!rayIntersect(point, sunDir, planetPos, atmosphereRadius, _, atmosphereThicknessAlongSunDir)) {
     return false;
   }
