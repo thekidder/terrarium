@@ -22,6 +22,10 @@ varying vec3 baseColor;
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 
+  float height = length(position);
+  float colorMultiplier = min(1.0, max(-1.0, (height - 6.6) * 0.5));
+  vec3 heightColor = 1.2 * colorMultiplier * vec3(1.0, 1.0, 1.0) + color;
+
   viewDir = normalize(position - cameraPosition);
 
   vec3 ambient = vec3(0.30, 0.36, 0.64) * 0.12;
@@ -30,7 +34,7 @@ void main() {
   float specAngle = max(dot(halfDir, normal), 0.0);
   vec3 specular = pow(specAngle, 1.0) * vec3(0.94, 0.93, 0.79) * 0.15;
   // vec3 specular =
-  baseColor = color * (ambient + diffuse + specular);
+  baseColor = heightColor * (ambient + diffuse + specular);
 
   float firstDist, secondDist, _;
   if(!rayIntersect(cameraPosition, viewDir, planetPos, atmosphereSize, firstDist, _)) {

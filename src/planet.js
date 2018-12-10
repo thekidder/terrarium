@@ -198,7 +198,7 @@ class Planet {
   }
 
   setScatteringUniforms(material, sunIntensityScale, mieScale) {
-    const g = -0.98;
+    const g = -0.99;
     material.uniforms.sunDir = { value: this.sun.position };
     material.uniforms.planetPos = { value: this.planetPos };
     material.uniforms.planetRadius = { value: this.waterSize * 0.9 };
@@ -209,7 +209,7 @@ class Planet {
     material.uniforms.rayScaleHeight = { value: this.rayScaleHeight };
     material.uniforms.g = { value: g };
     material.uniforms.gSq = { value: g * g };
-    material.uniforms.minMieDepth = { value: 0.025 };
+    material.uniforms.minMieDepth = { value: 0.015 };
     material.uniforms.mieConstant = { value: this.mieConstant.clone().multiplyScalar(mieScale) };
   }
 
