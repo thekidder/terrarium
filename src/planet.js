@@ -7,11 +7,11 @@ import Navmesh from './navmesh.js';
 import PlanetMath from './planet-math.js';
 import { savePng } from './image.js';
 
-import planetVertexShader from './planet-vertex.glsl';
-import skyVertexShader from './sky-vertex.glsl';
-import fragmentShader from './sky-fragment.glsl';
-import sunboxVertexShader from './sunbox-vertex.glsl';
-import sunboxFragmentShader from './sunbox-fragment.glsl';
+import planetVertexShader from './shaders/planet-vertex.glsl';
+import skyVertexShader from './shaders/sky-vertex.glsl';
+import fragmentShader from './shaders/sky-fragment.glsl';
+import sunboxVertexShader from './shaders/sunbox-vertex.glsl';
+import sunboxFragmentShader from './shaders/sunbox-fragment.glsl';
 
 class Planet {
   constructor(scene, sun, camera, heightmap, size) {
