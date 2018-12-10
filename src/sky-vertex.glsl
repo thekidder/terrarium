@@ -16,7 +16,7 @@ varying vec3 viewDir;
 varying vec3 baseColor;
 
 #pragma glslify: rayIntersect = require('./ray-intersect.glsl');
-#pragma glslify: getLightContributionfromRay = require('./rayleigh-scattering.glsl');
+#pragma glslify: getLightContributionfromRay = require('./scattering.glsl');
 
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
