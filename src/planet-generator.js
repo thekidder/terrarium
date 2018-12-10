@@ -10,7 +10,7 @@ const PlanetGenerator = {
     const random = new Random(seed).random;
 
     return Heightmap.generate(
-      3, HeightmapSimplexGenerator(random, scale, magnitude, size));
+      4, HeightmapSimplexGenerator(random, scale, magnitude, size));
   },
 };
 

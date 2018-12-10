@@ -130,7 +130,7 @@ class Editor {
   }
 
   buildHeightmap() {
-    return PlanetGenerator.buildHeightmap(this.seed, 1.5, 0.25, size);
+    return PlanetGenerator.buildHeightmap(this.seed, 1.4, 0.3, size);
   }
 
   regenerate() {

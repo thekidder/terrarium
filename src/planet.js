@@ -105,25 +105,6 @@ class Planet {
     this.scene.add(this.skySphere);
 
     this.setHeightmap(heightmap);
-
-    this.sphere.geometry.faces.forEach(function(f) {
-      const heights = [
-        this.sphere.geometry.vertices[f.a].length(),
-        this.sphere.geometry.vertices[f.b].length(),
-        this.sphere.geometry.vertices[f.c].length(),
-      ];
-      if (_.min(heights) < this.size * this.sandMinThreshold && _.max(heights) < this.size * this.sandMaxThreshold) {
-        f.color.setHex(this.colors.sand.base);
-        f.sand = true;
-      } else if (_.max(heights) < this.size * this.grassMaxThreshold) {
-        f.color.setHex(this.colors.grass.base);
-        f.grass = true;
-      } else {
-        f.color.setHex(this.colors.snow.base);
-      }
-    }.bind(this));
-
-    this.sphere.geometry.colorsNeedUpdate = true;
   }
 
   makeGrass(face) {
@@ -145,8 +126,27 @@ class Planet {
     this.sphere = new THREE.Mesh(this.heightmap.geometry, this.material);
     this.sphere.name = "heightmap";
 
-    this.navmesh = new Navmesh(this.heightmap.geometry, this.size);
-    this.navmesh.build();
+    this.sphere.geometry.faces.forEach(function (f) {
+      const heights = [
+        this.sphere.geometry.vertices[f.a].length(),
+        this.sphere.geometry.vertices[f.b].length(),
+        this.sphere.geometry.vertices[f.c].length(),
+      ];
+      if (_.min(heights) < this.size * this.sandMinThreshold && _.max(heights) < this.size * this.sandMaxThreshold) {
+        f.color.setHex(this.colors.sand.base);
+        f.sand = true;
+      } else if (_.max(heights) < this.size * this.grassMaxThreshold) {
+        f.color.setHex(this.colors.grass.base);
+        f.grass = true;
+      } else {
+        f.color.setHex(this.colors.snow.base);
+      }
+    }.bind(this));
+
+    this.sphere.geometry.colorsNeedUpdate = true;
+
+    // this.navmesh = new Navmesh(this.heightmap.geometry, this.size);
+    // this.navmesh.build();
 
     this.scene.add(this.sphere);
   }
