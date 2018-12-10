@@ -75,7 +75,7 @@ class Planet {
 
     this.rotation = 0.0;
 
-    const waterGeometry = new THREE.IcosahedronGeometry(1, 3);
+    const waterGeometry = new THREE.IcosahedronGeometry(1, 4);
     const waterMaterial = new THREE.MeshPhongMaterial({
       color: 0x214EA1,
       emissive: 0x000000,
@@ -218,8 +218,8 @@ class Planet {
 
   update(millis) {
     this.waterSphere.geometry.vertices.forEach(function(v) {
-      const s = 2.4;
-      let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 2000.0);
+      const s = 100;
+      let noise = this.waterSimplex.noise4D(v.original.x * s, v.original.y * s, v.original.z * s, this.t / 5000.0);
       noise = noise * 0.1;
       v.copy(v.original.clone().multiplyScalar(this.waterSize + noise));
     }.bind(this));
