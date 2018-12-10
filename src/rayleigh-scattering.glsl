@@ -29,7 +29,7 @@ bool sampleLightToSun(vec3 point, vec3 sunDir, vec3 planetPos, float planetRadiu
   return true;
 }
 
-const int numViewSamples = 100;
+const int numViewSamples = 80;
 
 vec3 getLightContributionfromRay(
     vec3 cameraPos,
